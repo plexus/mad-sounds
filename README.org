@@ -1,0 +1,11 @@
+* mad-sounds
+
+My dabblings in Overtone.
+
+* Links
+
+  [[http://vishnumenon.com/2013/06/25/musical-chains-music-generation-with-clojure/][- Overtone + Markov Chains]]
+
+* Copyright
+
+Copyright 2013 and later, Arne Brasseur.
