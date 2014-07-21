@@ -58,22 +58,29 @@
 (* 440 9)
 
 
-
 (do
   (definst plain-saw [freq 440]
     (saw freq))
   (plain-saw))
+(stop)
 
-(do
-  (definst plain-square [freq 440]
-    (square freq))
-  (plain-square))
+(volume 0.2)
 
 (do
   (definst plain-square [freq 440]
     (square freq))
   (plain-square))
 (stop)
+
+(use 'mad-sounds.launchpad-mini)
+
+(lp-bind-octave plain-square 0)
+(stop)
+
+(do
+  (definst plain-square [freq 440]
+    (square freq))
+  (plain-square))
 
 (do
   (definst filtered-square [freq 440 cutoff (* 9 440)]
@@ -84,12 +91,32 @@
   (definst filtered-square-mouse [freq 440 cutoff (* 15 440)]
     (normalizer (lpf (* (square freq) (lf-tri:kr (+ 10 (* 5 (mouse-x))))) (mouse-y freq cutoff))))
   (filtered-square-mouse))
-
+(noise)
 (stop)
 (do
   (definst plain-triangle [freq 440]
     (lf-tri freq))
   (plain-triangle))
+
+(do
+  (stop)
+  (definst out-of-phase-saws [freq 440 gate 1]
+    (* (env-gen (adsr) gate)
+       (mix [(saw (+ (* 2 (lf-tri 19)) freq)) (* (/ (sin-osc 15) 1) (saw (+ 3 (* 2 (lf-tri 5)) freq)))])))
+  (out-of-phase-saws))
+
+(out-of-phase-saws (midi->hz (note :c4)))
+(out-of-phase-saws (midi->hz (note :e4)))
+(out-of-phase-saws (midi->hz (note :g4)))
+
+(ctl out-of-phase-saws :gate 0)
+
+(lp-bind-octave out-of-phase-saws 1)
+
+(stop)
+(volume 1)
+
+
 
 
 (do
@@ -123,3 +150,5 @@
 (ctl modulation-test :depth 50)
 
 (stop)
+
+(pulse)

@@ -4,7 +4,8 @@
   (:require [overtone.live :refer :all])
   (:require [launchpad.device :as device])
   (:require [launchpad.grid :as grid])
-  (:require [overtone.studio.midi :as midi]))
+  (:require [overtone.studio.midi :as midi])
+  (:require [overtone.music.pitch :only [scale]]))
 
 (defn find-launchpad
   []
@@ -82,6 +83,20 @@
 (defn unhandle-side-controls
   [lp key]
   (remove-handlers lp (str key "side-controls") :note-on (side-controls-seq)))
+
+(defn lp-bind-octave [instrument row]
+  (let [now-playing (atom (vec (for [i (range 8)] nil)))
+        on-handler (fn [n x y] (let [hz (midi->hz (nth (scale :C4 :major) y))
+                                     inst (instrument hz)]
+                                 (swap! now-playing #(assoc-in % [y] inst))
+                                 (println @now-playing)
+                                 ))
+        off-handler (fn [n x y] (ctl (nth @now-playing y) :gate 0))
+        key (str "octave-" row)
+        buttons (filter (fn [[_ x _]] (= x row)) (gridseq))]
+    (setup-handlers launchpad-mini on-handler  key :note-on buttons)
+    (setup-handlers launchpad-mini off-handler key :note-off buttons)))
+
 
 ;; (comment
 ;;   (doseq [[x y note] (gridseq)]
