@@ -17,14 +17,14 @@
 
 (defonce launchpad-mini (find-launchpad))
 
+(defn coordinate->note [y x]
+  (-> device/grid-notes (nth y) (nth x)))
+
 (defn gridseq
   "Seq of [note x y] triplets"
   []
-  (let [grid (apply vector (map (partial apply vector) (grid/project device/grid-notes)))]
-    (for [x (range 8) y (range 8)]  [(get-in grid [x y]) x y])))
-
-(defn coordinate->note [y x]
-  (-> device/grid-notes (nth y) (nth x)))
+  (for [x (range 8) y (range 8)]
+    [(coordinate->note x y) x y]))
 
 (defn controls-seq
   "Seq of [note n] triplets with n from 1 to 8"
@@ -84,6 +84,18 @@
   [lp key]
   (remove-handlers lp (str key "side-controls") :note-on (side-controls-seq)))
 
+(defn lp-bind [instrument x y]
+  (let [now-playing (atom nil)
+        on-handler (fn [n x y] (let [inst (instrument)]
+                                 (swap! now-playing (fn [_] inst))
+                                 (println @now-playing)))
+        off-handler (fn [n x y] (ctl @now-playing :gate 0))
+        key (str "bind-" x "-" y)
+        buttons [[(coordinate->note x y) x y]]]
+    (println buttons)
+    (setup-handlers launchpad-mini on-handler  key :note-on buttons)
+    (setup-handlers launchpad-mini off-handler key :note-off buttons)))
+
 (defn lp-bind-octave [instrument row]
   (let [now-playing (atom (vec (for [i (range 8)] nil)))
         on-handler (fn [n x y] (let [hz (midi->hz (nth (scale :C4 :major) y))
@@ -94,6 +106,7 @@
         off-handler (fn [n x y] (ctl (nth @now-playing y) :gate 0))
         key (str "octave-" row)
         buttons (filter (fn [[_ x _]] (= x row)) (gridseq))]
+    (println buttons)
     (setup-handlers launchpad-mini on-handler  key :note-on buttons)
     (setup-handlers launchpad-mini off-handler key :note-off buttons)))
 

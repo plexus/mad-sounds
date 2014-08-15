@@ -6,9 +6,12 @@
 
 (set! *print-length* 103)
 
-(def kick (sample (freesound-path 2086)))
-(def snare (sample (freesound-path 122053)))
 (def tempo (metronome 90))
+
+((sample (freesound-path 2086)))
+((freesound 2086))
+
+(volume 3)
 
 (definst c-hat [amp 0.8 t 0.04]
   (let [env (env-gen (perc 0.001 t) 1 1 0 1 FREE)

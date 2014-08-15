@@ -1,19 +1,11 @@
 (ns mad-sounds.launchpad
-  (:require [overtone.live :refer :all])
-  (:require [overtone.inst.drum :refer :all])
-  (:require [launchpad.core :refer :all])
-  (:require [overtone.studio.scope :as scope])
-  (:require [overtone.inst.sampled-piano :refer :all]))
+  (:require [overtone.live :refer :all]
+            [overtone.studio.scope :refer :all]))
 
-(definst ding
-  [note 60 velocity 100 gate 1]
-  (let [freq (midicps note)
-        amp  (/ velocity 127.0)
-        snd  (sin-osc freq)
-        env  (env-gen (adsr 0.001 0.1 0.6 0.3) gate :action FREE)]
-    (* amp env snd)))
+(scope)
 (ding)
 (stop)
+
 
     (def dinger (midi-poly-player ding))
 
@@ -50,10 +42,24 @@
   (defsynth root-trg [rate 100]
     (out:kr root-trg-bus (impulse:kr rate)))
 
+  (definst inst1 []
+    (saw 880))
+
+(inst1)
+(stop)
+
+  (defsynth synth1 []
+    (out 0 (saw 880)))
+
+(stop)
+(synth1)
+
   (defsynth root-cnt []
     (out:kr root-cnt-bus (pulse-count:kr (in:kr root-trg-bus))))
+
   (defsynth beat-trg [div BEAT-FRACTION]
     (out:kr beat-trg-bus (pulse-divider (in:kr root-trg-bus) div))  )
+
   (defsynth beat-cnt []
     (out:kr beat-cnt-bus (pulse-count (in:kr beat-trg-bus))))
 
@@ -104,11 +110,6 @@
   (defsynth root-cnt [] (out:kr root-cnt-bus (pulse-count:kr (in:kr root-trg-bus))))
   (defsynth beat-trg [div BEAT-FRACTION] (out:kr beat-trg-bus (pulse-divider (in:kr root-trg-bus) div))  )
   (defsynth beat-cnt [] (out:kr beat-cnt-bus (pulse-count (in:kr beat-trg-bus))))
-
-  (def kick-s (freesound 777))
-  (def click-s (freesound 406))
-  (def boom-s (freesound 33637))
-  (def subby-s (freesound 25649))
 
   ;; Here's a synth for playing back the samples with a bit of modulation
   ;; to keep things interesting.
@@ -283,36 +284,14 @@
 
 
 (comment
-  (definst plexus-kick [freq 120 dur 0.5 width 0.5]
-    (let [freq-env (* freq (env-gen (perc 0 (* 0.99 dur))))
-          env (env-gen (perc 0.01 dur) 1 1 0 1 FREE)
-          sqr (* (env-gen (perc 0 0.01)) (pulse (* 2 freq) width))
-          src (sin-osc freq-env)
-          drum (+ sqr (* env src))]
-      (compander drum drum 0.2 1 0.1 0.01 0.01)))
+
 
   ;;Bind to the main grid
   (bind :up :0x0 #(kick))
   (bind :up :0x1 #(hat3))
   (bind :up :0x2 #(plexus-kick))
 
-  (definst beep [note 60 vol 1]
-    (let
-        [src (sin-osc (midicps note))
-         env (env-gen (perc 0.01 0.3) :action FREE)]
-      (* src env)))
 
-  (beep)
-
-  (definst weirdos []
-    (let [noise (lf-noise1 3)
-          saws  (mul-add (lf-saw [5 5.123]) 3 80)
-          freq  (midicps (mul-add noise 24 saws))
-          src   (* 0.4 (sin-osc freq))]
-      (comb-n src 1 0.3 2)))
-
-(weirdos)
-(stop)
   (bind :up :1x2 #(weirdos))
   (bind :up :1x1 #(stop))
 

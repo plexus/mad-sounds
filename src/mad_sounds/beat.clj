@@ -8,6 +8,8 @@
 
 (defonce beat-trigger (trig-id))
 
+(+ 2 2)
+
 (defsynth root-synth
   "Put a steady 100Hz pulse on the root-bus"
   [rate 100]
@@ -39,10 +41,17 @@
         :count (beat-count-synth)
         :trigger (trigger-beat-synth)})))
 
-(comment
-  (use 'overtone.inst.drum)
-  (use '[overtone.helpers.lib :only [uuid]])
+(start-the-beat!)
 
-  (defonce kick-uuid (uuid))
+(use 'overtone.inst.drum)
+(use '[overtone.helpers.lib :only [uuid]])
 
-  (on-trigger beat-trigger (fn [beat] (kick)) kick-uuid))
+(defonce kick-uuid (uuid))
+
+(stop)
+(on-trigger beat-trigger (fn [beat]
+                           (if
+                               (=  (rem beat 2) 0)
+                             (kick)
+                             (snare)
+                             )) kick-uuid)

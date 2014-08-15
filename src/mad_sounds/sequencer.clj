@@ -72,11 +72,6 @@
   (handle-cell launchpad-mini 6 6 (fn [n x y] (sampled-piano (note :b5))) "piano")
   (handle-cell launchpad-mini 6 7 (fn [n x y] (sampled-piano (note :e6))) "piano")
 
-  (def kick-s (freesound 777))
-  (def click-s (freesound 406))
-  (def boom-s (freesound 33637))
-  (def subby-s (freesound 25649))
-
   (kick-s)
   (snare)
   (def kicks (doall
@@ -84,12 +79,6 @@
                 (mono-sequencer :buf kick-s :beat-num x :sequencer (nth buffers 0)))))
 
 
-  (definst weirdos []
-    (let [noise (lf-noise1 3)
-          saws  (mul-add (lf-saw [5 5.123]) 3 80)
-          freq  (midicps (mul-add noise 24 saws))
-          src   (* 0.4 (sin-osc freq))]
-      (comb-n src 1 0.3 2)))
 
   (minimal-sequencer kick-s (nth buffers 0))
   ;(minimal-sequencer click-s (nth buffers 1))
