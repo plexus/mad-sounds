@@ -9,12 +9,3 @@
 
 (def kick-fat (freesound 2086))
 (def snare-fat (freesound 122053))
-
-
-(kick-thin)
-(click-s)
-(boom-s)
-(subby-s)
-(flute-A)
-(kick-fat)
-(snare-fat)

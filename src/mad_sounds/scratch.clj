@@ -5,118 +5,51 @@
             [mad-sounds.inst.synths :refer :all]))
 
 
-(def *base* (note :C1))
-(def *scale* (partial nth-interval :major))
-
-(defn scale-nth [idx]
-  (+ *base* (*scale* idx)))
-
-(def *sig* 4)
-(def *drums* [[kick-fat  [0 2]]
-              [snare-fat [1 3]]
-              [click-s   [1/2   3 7/2]]])
-
-(def *bass-line* (map scale-nth [0 2 0 2  6 3 5 4  0 0 0 0  0 5 4 3]))
-
-(defn from [metro offset]
-  (fn [beat] (metro (+ beat offset))))
-
-(defn speed-up [metro factor]
-  (fn [beat] (metro (/ beat factor))))
-
-(defn -rewrite-ats [timervar]
-  (fn [forms]
-    (for [form forms]
-      (if (list? form)
-        ((-rewrite-ats timervar)
-         (if (= (first form) 'at)
-           (seq (assoc-in (vec form) [1] `(~timervar ~(nth form 1))))
-           form))
-        form))))
-
-(defmacro defloop [name count args & body]
-  (let [timervar 'timer#
-        newbody (map (-rewrite-ats timervar) body)]
-    `(defn ~name [~timervar ~@args]
-       ~@newbody
-       (apply-by (~timervar ~next) #'~name [(from ~timervar ~count) ~@args]))))
+(pw-gong)
 
 
-(defn even-melody [timer inst [note & notes]]
-  (do
-    (at (timer 0) (let [i (inst note)]
-                      (at (timer 1) (ctl i :gate 0))))
-    (let [next (from timer 0.5)]
-      (if notes
-        (even-melody next inst notes)
-        next))))
+(env-gen (envelope [0,1,1,0] [0.75*dr, 0.24*dr, 0.01*dr]))
 
-;; (defn loop-melody [timer inst notes]
-;;   (let [next (even-melody timer inst notes)]
-;;     (apply-by (next 0)
-;;      #'loop-melody next inst notes [])))
-
-
-(defn loop-bass [timer inst]
-  (let [next (even-melody timer inst *bass-line*)]
-    (apply-by (next 0) #'loop-bass next inst [])))
-
-(defloop beat-loop *sig* []
-  (doseq [[drum pattern] *drums*]
-    (doseq [time pattern] (at time (drum)))))
-
-(defn loop-beat [timer]
-  (doseq [[drum pattern] *drums*]
-    (doseq [time pattern]
-      (at (timer time) (drum))))
-  (apply-by (timer *sig*) #'loop-beat [(from timer *sig*)]))
-
-(defn play! [m]
-  (loop-bass m vintage-bass)
-  (loop-beat m))
-
-(stop)
-(let [m (metronome 120)]
-  (loop-bass m #(cs80lead (midi->hz %))))
-
-(let [m (metronome 120)]
-  (loop-bass m #(tb303 (midi->hz %) :amp 1)))
-
-(volume 0.8)
-(play! (metronome 120))
-
-(defn from [metro offset]
-  (fn [beat] (metro (+ beat offset))))
-
-(defn kick-and-snare [metro]
-  (at (metro 1) (kick-fat))
-  (at (metro 2) (snare-fat))
-  (apply-by (metro 3) #'kick-and-snare [(from metro 2)]))
-
-
-(def *m* (metronome 120))
-
-(*m* 1)
-
-(loop-beat (from *m* (*m*)))
-(loop-bass (from *m* (*m*)) vintage-bass)
-
-(loop-bass (metronome 120) vintage-bass)
-
-(stop)
-
-(resolve-scale :ionian)
-(choose (scale-field :g :ionian))
-
-(stop)
-(stop)
-(kick-fat)
-(snare-fat)
-
-(click-s)
-(boom-s)
-(flute-A)
-(volume 0.3)
+(comment
+  ;; Scheme/snd version of a gong
+  (definstrument (gong start-time duration frequency amplitude
+                       (degree 0.0) (distance 1.0) (reverb-amount 0.005))
+    (let ((mfq1 (* frequency 1.16))
+          (mfq2 (* frequency 3.14))
+          (mfq3 (* frequency 1.005)))
+      (let ((indx01 (hz->radians (* .01 mfq1)))
+            (indx11 (hz->radians (* .30 mfq1)))
+            (indx02 (hz->radians (* .01 mfq2)))
+            (indx12 (hz->radians (* .38 mfq2)))
+            (indx03 (hz->radians (* .01 mfq3)))
+            (indx13 (hz->radians (* .50 mfq3)))
+            (atpt 5)
+            (atdur (* 100 (/ .002 duration)))
+            (expf '(0 0  3 1  15 .5  27 .25  50 .1  100 0))
+            (rise '(0 0  15 .3  30 1.0  75 .5  100 0))
+            (fmup '(0 0  75 1.0  98 1.0  100 0))
+            (fmdwn '(0 0  2 1.0  100 0)))
+        (let ((ampfun (make-env (stretch-envelope expf atpt atdur)
+                                :scaler amplitude :duration duration))
+              (indxfun1 (make-env fmup :duration duration
+                                  :scaler (- indx11 indx01) :offset indx01))
+              (indxfun2 (make-env fmdwn :duration duration
+                                  :scaler (- indx12 indx02) :offset indx02))
+              (indxfun3 (make-env rise :duration duration
+                                  :scaler (- indx13 indx03) :offset indx03))
+              (loc (make-locsig degree distance reverb-amount))
+              (carrier (make-oscil frequency))
+              (mod1 (make-oscil mfq1))
+              (mod2 (make-oscil mfq2))
+              (mod3 (make-oscil mfq3))
+              (beg (seconds->samples start-time))
+              (end (seconds->samples (+ start-time duration))))
+          (do ((i beg (+ i 1)))
+              ((= i end))
+              (locsig loc i (* (env ampfun)
+                               (oscil carrier (+ (* (env indxfun1) (oscil mod1))
+                                                 (* (env indxfun2) (oscil mod2))
+                                                 (* (env indxfun3) (oscil mod3))))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Session with til at eurucamp
