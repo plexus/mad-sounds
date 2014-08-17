@@ -1,5 +1,6 @@
 (ns mad-sounds.inst.synths
-  (:require [overtone.live :refer :all]))
+  (:require [overtone.live :refer :all]
+            [overtone.repl.graphviz :refer :all]))
 
 (definst plexus-kick [freq 120 dur 0.5 width 0.5]
     (let [freq-env (* freq (env-gen (perc 0 (* 0.99 dur))))

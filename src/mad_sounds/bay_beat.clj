@@ -4,24 +4,56 @@
             [mad-sounds.inst.sampled :refer :all]
             [mad-sounds.inst.synths :refer :all]))
 
-(def *base* (note :C1))
+(def *base* (note :C3))
 (def *scale* (partial nth-interval :major))
 
 (defn scale-nth [idx]
   (+ *base* (*scale* idx)))
 
-(def *sig* 4)
-(def *drums* [[kick-fat  [0 2]]
-              [snare-fat [1 3]]
-              [click-s   [1/2   3 7/2]]])
+(def *sig* 8)
+(def *drums* [[kick-fat  [0 2.5 4 6.5]]
+              [snare-fat [1 3 5 7]]
+              [click-s   [1/2 3 7/2 5 6 6.75 7]]])
 
-(def *bass-line* (map scale-nth [0 2 0 2  6 3 5 4  0 0 0 0  0 5 4 3]))
+(def *bass-line* (map scale-nth [0 2 0 2  6 0 5 4  0 0 0 2  0 5 -1 3]))
 
 (defn from [metro offset]
   (fn [beat] (metro (+ beat offset))))
 
-(defn speed-up [metro factor]
-  (fn [beat] (metro (/ beat factor))))
+(defn even-melody [timer inst [note & notes]]
+  (do
+    (at (timer 0) (let [i (inst note)]
+                      (at (timer 1) (ctl i :gate 0))))
+    (let [next (from timer 0.5)]
+      (if notes
+        (even-melody next inst notes)
+        next))))
+
+(defn loop-bass [timer inst]
+  (let [next (even-melody timer inst *bass-line*)]
+    (apply-by (next 0) #'loop-bass next inst [])))
+
+(defn loop-beat [timer]
+  (doseq [[drum pattern] *drums*]
+    (doseq [time pattern]
+      (at (timer time) (drum))))
+  (apply-by (timer *sig*) #'loop-beat [(from timer *sig*)]))
+
+(defn play! [m]
+  (loop-bass m vintage-bass)
+  (loop-beat m))
+
+(play! (metronome 90))
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+
 
 (defn -rewrite-ats [timervar]
   (fn [forms]
@@ -41,78 +73,43 @@
        (apply-by (~timervar ~next) #'~name [(from ~timervar ~count) ~@args]))))
 
 
-(defn even-melody [timer inst [note & notes]]
-  (do
-    (at (timer 0) (let [i (inst note)]
-                      (at (timer 1) (ctl i :gate 0))))
-    (let [next (from timer 0.5)]
-      (if notes
-        (even-melody next inst notes)
-        next))))
+  (let [m (metronome 120)]
+    (loop-bass m #(cs80lead (midi->hz %))))
 
-;; (defn loop-melody [timer inst notes]
-;;   (let [next (even-melody timer inst notes)]
-;;     (apply-by (next 0)
-;;      #'loop-melody next inst notes [])))
+  (let [m (metronome 120)]
+    (loop-bass m #(tb303 (midi->hz %) :amp 1)))
 
 
-(defn loop-bass [timer inst]
-  (let [next (even-melody timer inst *bass-line*)]
-    (apply-by (next 0) #'loop-bass next inst [])))
+  (defn from [metro offset]
+    (fn [beat] (metro (+ beat offset))))
 
-(defloop beat-loop *sig* []
-  (doseq [[drum pattern] *drums*]
-    (doseq [time pattern] (at time (drum)))))
-
-(defn loop-beat [timer]
-  (doseq [[drum pattern] *drums*]
-    (doseq [time pattern]
-      (at (timer time) (drum))))
-  (apply-by (timer *sig*) #'loop-beat [(from timer *sig*)]))
-
-(defn play! [m]
-  (loop-bass m vintage-bass)
-  (loop-beat m))
-
-(stop)
-(let [m (metronome 120)]
-  (loop-bass m #(cs80lead (midi->hz %))))
-
-(let [m (metronome 120)]
-  (loop-bass m #(tb303 (midi->hz %) :amp 1)))
-
-(volume 0.8)
-(play! (metronome 120))
-
-(defn from [metro offset]
-  (fn [beat] (metro (+ beat offset))))
-
-(defn kick-and-snare [metro]
-  (at (metro 1) (kick-fat))
-  (at (metro 2) (snare-fat))
-  (apply-by (metro 3) #'kick-and-snare [(from metro 2)]))
+  (defn kick-and-snare [metro]
+    (at (metro 1) (kick-fat))
+    (at (metro 2) (snare-fat))
+    (apply-by (metro 3) #'kick-and-snare [(from metro 2)]))
 
 
-(def *m* (metronome 120))
 
-(*m* 1)
+  (def *m* (metronome 120))
 
-(loop-beat (from *m* (*m*)))
-(loop-bass (from *m* (*m*)) vintage-bass)
+  (*m* 1)
 
-(loop-bass (metronome 120) vintage-bass)
+  (loop-beat (from *m* (*m*)))
+  (loop-bass (from *m* (*m*)) vintage-bass)
 
-(stop)
+  (loop-bass (metronome 120) vintage-bass)
 
-(resolve-scale :ionian)
-(choose (scale-field :g :ionian))
+  (stop)
 
-(stop)
-(stop)
-(kick-fat)
-(snare-fat)
+  (resolve-scale :ionian)
+  (choose (scale-field :g :ionian))
 
-(click-s)
-(boom-s)
-(flute-A)
-(volume 0.3)
+  (stop)
+  (stop)
+  (kick-fat)
+  (snare-fat)
+
+  (click-s)
+  (boom-s)
+  (flute-A)
+  (volume 0.3))
