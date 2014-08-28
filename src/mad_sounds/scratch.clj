@@ -5,6 +5,173 @@
             [mad-sounds.inst.synths :refer :all]))
 
 
+(definst emacsberlinsynth [note 60]
+  (* (env-gen (perc))
+     (saw (midicps note))))
+
+(emacsberlinsynth (note :f3))
+(stop)
+
+
+
+(definst oscilophone [note 60 duration 1.0 level 1.0
+                      attack 0.1 decay 0.2 sustain 0.5 release 0.05
+                      gate 1]
+  (* level
+     (env-gen (adsr attack decay sustain release) :gate gate)
+     (sin-osc (midicps note))))
+
+(def synth1 (synth-maker :note (note :c5) ))
+(def synth2 (synth-maker :note (note :e5) ))
+(def synth3 (synth-maker :note (note :g5) ))
+
+(ctl playing-synth :gate 1)
+(ctl playing-synth :note (note :g5))
+
+
+(let [name1 75
+      name2 99]
+  (synth-maker :note name1)
+  (synth-maker :note name2))
+
+(synth-maker :note name1)
+
+(enveloped-synth :note )
+(stop)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(def kick-fat (freesound 2086))
+(def snare-fat (freesound 122053))
+
+;; bpm -> (beat-nr -> time-ms)
+(start-beat (metronome 120))
+
+(defn ld [beat]
+  (+ beat 3))
+
+(def ld (fn [x y]
+          (+ x y)))
+
+(ld 3 5)
+
+((fn [x y] (+ x y)) 3 5)
+
+(defn from [m beat]
+  (fn [& beat]
+    (if beat
+      (m (+ 2 beat))
+      (+ (m) 2))))
+
+(let [m     (metronome 120)
+      new-m (from m 2)]
+  m ;; (beat-nr -> time-ms)|( -> next-beat-nr)
+  (m)
+  (m 2)
+
+  new-m ;; (beat-nr -> time-ms)
+  (new-m)
+  (new-m 2)
+  )
+
+;; bpm -> (beat-nr -> time-ms)|( -> next-beat-nr)
+;; bpm -> (beat-nr -> time-ms)|( -> next-beat-nr)
+
+(defn start-beat [m]
+  (at (m (+ (m) 0)) (kick-fat))
+  (at (m (+ (m) 1)) (snare-fat))
+  (apply-by (m (+ (m) 2)) start-beat [m]))
+
+(let [ruby-monster {:name "Bettina" :mad-skillz ["beats"]}]
+  (:name ruby-monster))
+
+(:foo {:foo 7})
+(get {:foo 7} :foo)
+
+(get-in
+ {:foo 7
+  :bar [1 2 {:key :value}]}
+
+ [:bar 2 :key])
+
+(defn start-beat [m]
+  (at (m 0) ((rand-nth [kick-fat snare-fat])))
+  (at (m 1) (snare-fat))
+  (apply-by (m 2) start-beat [(from m 2)]))
+
+(start-beat (metronome 120))
+
+
+
+
+;; => [1.408385469554E12 1.408385470054E12 1.408385470554E12]
+
+
+
+
+(stop)
+
+(kick-fat)
+(snare-fat)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (pw-gong)
 
 

@@ -1,20 +1,40 @@
 (ns mad-sounds.inst.synths
-  (:require [overtone.live :refer :all]
-            [overtone.repl.graphviz :refer :all]))
+  (:require [overtone.live :refer :all]))
 
 (definst plexus-kick [freq 120 dur 0.5 width 0.5]
-    (let [freq-env (* freq (env-gen (perc 0 (* 0.99 dur))))
-          env (env-gen (perc 0.01 dur) 1 1 0 1 FREE)
-          sqr (* (env-gen (perc 0 0.01)) (pulse (* 2 freq) width))
-          src (sin-osc freq-env)
-          drum (+ sqr (* env src))]
-      (compander drum drum 0.2 1 0.1 0.01 0.01)))
+  (let [freq-env (* freq (env-gen (perc 0 (* 0.99 dur))))
+        env (env-gen (perc 0.01 dur) 1 1 0 1 FREE)
+        sqr (* (env-gen (perc 0 0.01)) (pulse (* 2 freq) width))
+        src (sin-osc freq-env)
+        drum (+ sqr (* env src))]
+    (compander drum drum 0.2 1 0.1 0.01 0.01)))
 
 (definst beep [note 60 vol 1]
   (let
       [src (sin-osc (midicps note))
        env (env-gen (perc 0.01 0.3) :action FREE)]
     (* src env)))
+
+(adsr 0.1 0.2 0.5 0.3)
+(perc)
+(envelope [0 1 0] [0.1 0.5])
+
+
+(definst beep2 [freq 440]
+  (*
+   (env-gen (perc))
+   (sin-osc freq)))
+
+(beep2)
+
+(defsynth beep2 [freq 440]
+  (out 0
+       (sin-osc freq)))
+
+(def beep2 (synth [freq 440]
+                  (out 0
+                       (sin-osc freq))))
+
 
 (definst weirdos []
   (let [noise (lf-noise1 3)
@@ -23,12 +43,23 @@
         src   (* 0.4 (sin-osc freq))]
     (comb-n src 1 0.3 2)))
 
-(definst pw-gong [frequency 80 duration 2]
+(weirdos)
+
+noise = (lf-noise1 3)
+saws  = (mul-add (lf-saw [5 5.123]) 3 80)
+freq  = (midicps (mul-add noise 24 saws))
+src   = (* 0.4 (sin-osc freq))
+
+
+(weirdos)
+
+(definst pw-gong [note 50 duration 2]
   "Another port of Paul Weineke's gong.
 original (CLM): https://ccrma.stanford.edu/software/snd/snd/clm-ins.scm
 c-sound: http://varioussmallfires.blogspot.com/2011/07/fm-gong.html
 supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.html"
-  (let [mod1f (* frequency 1.16)
+  (let [frequency (midicps note)
+        mod1f (* frequency 1.16)
         mod2f (* frequency 3.14)
         mod3f (* frequency 1.005)
 
@@ -60,6 +91,10 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
      :in (* ampenv
             (sin-osc (+ frequency mod1 mod2 mod3))))))
 
+(show-graphviz-synth pw-gong)
+
+(pw-gong 200)
+(volume 1)
 (comment
   "Attempt to make the pw-gong sustain and respond to a gate signal, not working so far"
 

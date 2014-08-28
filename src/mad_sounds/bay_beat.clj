@@ -11,14 +11,34 @@
   (+ *base* (*scale* idx)))
 
 (def *sig* 8)
-(def *drums* [[kick-fat  [0 2.5 4 6.5]]
-              [snare-fat [1 3 5 7]]
-              [click-s   [1/2 3 7/2 5 6 6.75 7]]])
+(def drums [[kick-fat  [0 2.5 4 6.5]]
+            [snare-fat [1 3 5 7]]
+            [click-s   [1/2 3 7/2 5 6 6.75 7]]])
 
-(def *bass-line* (map scale-nth [0 2 0 2  6 0 5 4  0 0 0 2  0 5 -1 3]))
+
+(map vector [:a :b :c] (range))
+;; [[:a 0] [:b 1] [:c 2]]
+
+
+(def ^:dynamic *bass-line* (map scale-nth [0 2 0 2  6 0 5 4  0 0 0 2  0 5 -1 3]))
+
+(def *m* (metronome 90))
+(*m*)
+
+(let [m (metronome 120)]
+  (m)
+  (m 0) ;; 95898254s 450ms
+  (m 1) ;; 95898254s 550ms
+  (m 2) ;; 95898254s 650ms
+  ((from m 2) 0)
+  (let [new-metronome (from m 2)]
+    (new-metronome 0) ;; 95898254s 650ms
+    )
+  )
 
 (defn from [metro offset]
-  (fn [beat] (metro (+ beat offset))))
+  (fn [beat]
+    (metro (+ beat offset))))
 
 (defn even-melody [timer inst [note & notes]]
   (do
@@ -33,11 +53,6 @@
   (let [next (even-melody timer inst *bass-line*)]
     (apply-by (next 0) #'loop-bass next inst [])))
 
-(defn loop-beat [timer]
-  (doseq [[drum pattern] *drums*]
-    (doseq [time pattern]
-      (at (timer time) (drum))))
-  (apply-by (timer *sig*) #'loop-beat [(from timer *sig*)]))
 
 (defn play! [m]
   (loop-bass m vintage-bass)

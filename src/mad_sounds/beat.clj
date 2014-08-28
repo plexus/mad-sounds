@@ -30,6 +30,10 @@
   []
   (send-trig (in:kr beat-bus) beat-trigger (+ (in:kr beat-count-bus) 1)))
 
+(fn [] )
+#()
+#{:foo :bar :this :is 'a 'set}
+
 (defn start-the-beat!
   ([] (start-the-beat! 140))
   ([bpm] (start-the-beat! bpm 30))
