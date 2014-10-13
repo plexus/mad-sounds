@@ -33,7 +33,7 @@
 ;; ======================================================================
 ;; found samples via this web page
 ;; http://technicae.cogitat.io/2014/07/oscon-2014-theme-song-andrew-sorensen.html
-(def salamander-path "/home/arne/Samples/salamander/") ;; !FIXME!
+(def salamander-path "/home/arne/Samples/salamander/OH") ;; !FIXME!
 (def kick1          (sample (str salamander-path "kick_OH_F_9.wav")))
 ;; Not currently using these...overtone version working fine for me
 ;;(def closed-hi-hat (sample (str salamander-path "hihatClosed_OH_F_20.wav")))
@@ -94,7 +94,7 @@
 (defn left-hand
   "temporal recursion pattern"
   [beat ps ds]
-  (let [inst pw-gong
+  (let [inst fmsynth
         dur (first ds)];)) ;; uncomment to stop
 
     ;; add this 3rd

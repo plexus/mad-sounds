@@ -9,49 +9,12 @@
         drum (+ sqr (* env src))]
     (compander drum drum 0.2 1 0.1 0.01 0.01)))
 
-(definst beep [note 60 vol 1]
-  (let
-      [src (sin-osc (midicps note))
-       env (env-gen (perc 0.01 0.3) :action FREE)]
-    (* src env)))
-
-(adsr 0.1 0.2 0.5 0.3)
-(perc)
-(envelope [0 1 0] [0.1 0.5])
-
-
-(definst beep2 [freq 440]
-  (*
-   (env-gen (perc))
-   (sin-osc freq)))
-
-(beep2)
-
-(defsynth beep2 [freq 440]
-  (out 0
-       (sin-osc freq)))
-
-(def beep2 (synth [freq 440]
-                  (out 0
-                       (sin-osc freq))))
-
-
 (definst weirdos []
   (let [noise (lf-noise1 3)
         saws  (mul-add (lf-saw [5 5.123]) 3 80)
         freq  (midicps (mul-add noise 24 saws))
         src   (* 0.4 (sin-osc freq))]
     (comb-n src 1 0.3 2)))
-
-(weirdos)
-
-noise = (lf-noise1 3)
-saws  = (mul-add (lf-saw [5 5.123]) 3 80)
-freq  = (midicps (mul-add noise 24 saws))
-src   = (* 0.4 (sin-osc freq))
-
-
-(weirdos)
 
 (definst pw-gong [note 50 duration 2]
   "Another port of Paul Weineke's gong.
@@ -69,13 +32,14 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
 
         idx2a (* 0.01 mod2f)
         idx2b (* 0.38 mod2f)
-        idx2scaler   (- idx2b idx2a)
+        idx2scaler (- idx2b idx2a)
 
         idx3a (* 0.01 mod3f)
         idx3b (* 0.50 mod3f)
-        idx3scaler   (- idx3b idx3a)
+        idx3scaler (- idx3b idx3a)
 
-        scaled-env (fn [levels durations] (envelope levels (map #(* % duration) durations)))
+        scaled-env (fn [levels durations]
+                     (envelope levels (map #(* % duration) durations)))
 
         fmup   (env-gen (scaled-env [0 1 1 0]       [0.75 0.24 0.01]))
         fmdown (env-gen (scaled-env [0 1 0]         [0.02 0.98]))
@@ -91,10 +55,21 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
      :in (* ampenv
             (sin-osc (+ frequency mod1 mod2 mod3))))))
 
-(show-graphviz-synth pw-gong)
+(definst plexus-gong [note 60 duration 2 gate 1]
+"Super simple synth, just a single sine wave, but with an envelope like that of a gong"
+  (let [freq (midicps note)
+        env (env-gen (adsr 0.002 (- duration 0.002) 0.001 0.1) :gate gate)]
+    (* env
+       (sin-osc freq))))
 
-(pw-gong 200)
-(volume 1)
+
+(plexus-gong)
+
+(let [mod1f 1.0]
+  (+
+   (* 0.01 mod1f)
+   (- (* 0.30 mod1f) (* 0.01 mod1f))))
+
 (comment
   "Attempt to make the pw-gong sustain and respond to a gate signal, not working so far"
 
@@ -113,11 +88,12 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
 
           idx2a (* 0.01 mod2f)
           idx2b (* 0.38 mod2f)
-          idx2scaler   (- idx2b idx2a)
+          idx2scaler (- idx2b idx2a)
 
           idx3a (* 0.01 mod3f)
           idx3b (* 0.50 mod3f)
-          idx3scaler   (- idx3b idx3a)
+          idx3scaler (- idx3b idx3a)
+
 
           scaled-env (fn [levels durations & {:keys [curve] :or {curve :linear}}]
                        (env-gen (envelope
@@ -141,21 +117,7 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
        :in (* ampenv
               (sin-osc (+ frequency mod1 mod2 mod3)))))))
 
-(comment
-  ((synth (out 0
-               (let [note-f (mouse-x:kr 55 75)
-                     note   (round note-f 2)
-                     note2  (+ note 4)
-                     ]
-                 (sin-osc [(midicps note) (midicps note2)])))))
 
-  ((synth (out 0
-               (let [note-f (mouse-y:kr 55 75)
-                     note   (+ 1 (round note-f 2))
-                     note2  (+ note 8)
-                     ]
-                 (sin-osc [(midicps note) (midicps note2)]))))))
-(stop)
 (definst impulsar []
   (* 0.3
      (lpf
@@ -171,3 +133,18 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
        (sin-osc
         (+ 440
            (* 440 (mouse-x)))))))))
+
+(comment
+  ((synth (out 0
+               (let [note-f (mouse-x:kr 55 75)
+                     note   (round note-f 2)
+                     note2  (+ note 4)
+                     ]
+                 (sin-osc [(midicps note) (midicps note2)])))))
+
+  ((synth (out 0
+               (let [note-f (mouse-y:kr 55 75)
+                     note   (+ 1 (round note-f 2))
+                     note2  (+ note 8)
+                     ]
+                 (sin-osc [(midicps note) (midicps note2)]))))))

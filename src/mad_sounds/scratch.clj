@@ -4,15 +4,60 @@
             [mad-sounds.inst.sampled :refer :all]
             [mad-sounds.inst.synths :refer :all]))
 
+;; In a hostel in Taiwan they had a little instrument kind of like a
+;; steeldrum, and it only had these notes
+(def noteset [:f4 :f5 :c5 :a#5 :a4 :e5 :a#4 :a5])
 
-(definst emacsberlinsynth [note 60]
-  (* (env-gen (perc))
-     (saw (midicps note))))
+(def metro (metronome 60))
 
-(emacsberlinsynth (note :f3))
+(let [foo (metro)]
+  (at (metro foo)       (plexus-gong2 70))
+  (at (metro (+ foo 1)) (plexus-gong2 72))
+  (at (metro (+ foo 2)) (plexus-gong2 74)))
+
+(note :c4)
+
+(note :b#5
+      (note :c6)
+      (note :d6))
+
+(metro 336)
+
+(let [foo 7
+      bar 8])
+
+(definst plexus-gong2 [note 60 duration 2 gate 1]
+  (let [freq (midicps note)
+        env-signal (env-gen (adsr 0.002 (- duration 0.002) 0.001 0.1) :gate gate)
+        sine-signal (sin-osc freq)]
+    (* env-signal sine-signal)))
+
+(defn player1 [metro beat note1 note2]
+  "Temporal recursive gong player. Uses three different notes each bar. One changes every bar,
+one every two bars, one every four bars"
+  (let [note1 (if (= 0 (rem beat 8)) (rand-nth (remove #(= note1 %) noteset)) note1)
+        note2 (if (= 0 (rem beat 16)) (rand-nth (remove #(= note1 %) noteset)) note2)
+        note3 (rand-nth (remove #(= note1 %) noteset))]
+    (at (metro (+ 1 beat)) (plexus-gong2 (note note1)))
+    (at (metro (+ 2 beat)) (plexus-gong2 (note note2)))
+    (at (metro (+ 3 beat)) (plexus-gong2 (note note3)))
+    (at (metro (+ 4 beat)) (plexus-gong2 (note note2)))
+    (apply-by (metro (+ 4 beat)) #'player1 [metro (+ 4 beat) note1 note2])))
+
+(player1 metro (metro) (rand-nth noteset) (rand-nth noteset))
 (stop)
 
 
+(comment
+
+
+  (plexus-gong (note (rand-nth *notes*)))
+  (ctl plexus-gong :gate 0)
+  (stop)#
+
+  (volume 0.5))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (definst oscilophone [note 60 duration 1.0 level 1.0
                       attack 0.1 decay 0.2 sustain 0.5 release 0.05
@@ -20,6 +65,8 @@
   (* level
      (env-gen (adsr attack decay sustain release) :gate gate)
      (sin-osc (midicps note))))
+
+(ctl oscilophone :gate 0)
 
 (def synth1 (synth-maker :note (note :c5) ))
 (def synth2 (synth-maker :note (note :e5) ))
@@ -36,7 +83,6 @@
 
 (synth-maker :note name1)
 
-(enveloped-synth :note )
 (stop)
 
 

@@ -16,10 +16,6 @@
             [click-s   [1/2 3 7/2 5 6 6.75 7]]])
 
 
-(map vector [:a :b :c] (range))
-;; [[:a 0] [:b 1] [:c 2]]
-
-
 (def ^:dynamic *bass-line* (map scale-nth [0 2 0 2  6 0 5 4  0 0 0 2  0 5 -1 3]))
 
 (def *m* (metronome 90))
@@ -60,7 +56,7 @@
 
 (play! (metronome 90))
 
-
+(vintage-bass)
 
 
 
