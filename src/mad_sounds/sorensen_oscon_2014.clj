@@ -33,8 +33,8 @@
 ;; ======================================================================
 ;; found samples via this web page
 ;; http://technicae.cogitat.io/2014/07/oscon-2014-theme-song-andrew-sorensen.html
-(def salamander-path "/home/arne/Samples/salamander/OH") ;; !FIXME!
-(def kick1          (sample (str salamander-path "kick_OH_F_9.wav")))
+;; (def salamander-path "/home/arne/Samples/salamander/OH") ;; !FIXME!
+;; (def kick1          (sample (str salamander-path "kick_OH_F_9.wav")))
 ;; Not currently using these...overtone version working fine for me
 ;;(def closed-hi-hat (sample (str salamander-path "hihatClosed_OH_F_20.wav")))
 ;;(def pedal-hi-hat  (sample (str salamander-path "hihatFoot_OH_MP_12.wav")))
@@ -109,7 +109,6 @@
     (apply-by (metro (+ beat dur))
               #'left-hand [(+ beat dur) (rotate 1 ps) (rotate 1 ds)])))
 
-(volume 0.7)
 ;;(left-hand (metro) [:g3 :g3 :a3 :b3] [1])
 ;;(left-hand (metro) [:g3 :g3 :a3 :b3] [1 0.5 1.5 1])
 ;;(stop)
@@ -171,22 +170,22 @@
 
 ;; ======================================================================
 ;; kick drum
-(defn kick-drum
-  [beat dur]
-  (let [f (midi->hz (- (note @root) 4))];)) ;; uncomment to stop
-    (at (metro (- beat 1/4)) (kick1 :amp 0.6))
-    (at (metro beat)         (kick1 :amp 0.8))
-    (apply-by (metro (+ beat (* 0.5 dur))) #'kick-drum [(+ beat dur) dur])))
+;; (defn kick-drum
+;;   [beat dur]
+;;   (let [f (midi->hz (- (note @root) 4))];)) ;; uncomment to stop
+;;     (at (metro (- beat 1/4)) (kick1 :amp 0.6))
+;;     (at (metro beat)         (kick1 :amp 0.8))
+;;     (apply-by (metro (+ beat (* 0.5 dur))) #'kick-drum [(+ beat dur) dur])))
 
 ;; ======================================================================
 ;; hats
-(def hat0 (partial closed-hat :low 10000 :hi 8000))
-(def hat1 (partial closed-hat2))
-(defn hats
-  [beat dur]
-  (let [hat (rand-nth [hat0 hat1])];)) ;; uncomment to stop
-    (at (metro beat) (hat) (cosr beat 0.4 0.5 (rand-nth [3/7 2/5])))
-    (apply-by (metro (+ beat dur)) #'hats [(+ beat dur) dur])))
+;; (def hat0 (partial closed-hat :low 10000 :hi 8000))
+;; (def hat1 (partial closed-hat2))
+;; (defn hats
+;;   [beat dur]
+;;   (let [hat (rand-nth [hat0 hat1])];)) ;; uncomment to stop
+;;     (at (metro beat) (hat) (cosr beat 0.4 0.5 (rand-nth [3/7 2/5])))
+;;     (apply-by (metro (+ beat dur)) #'hats [(+ beat dur) dur])))
 
 (stop)
 
