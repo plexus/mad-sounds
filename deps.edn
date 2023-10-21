@@ -3,4 +3,8 @@
  {org.clojure/clojure {:mvn/version "1.11.1"},
   overtone/overtone {:local/root "/home/arne/github/overtone"} #_{:mvn/version "0.10.6"},
   #_#_launchpad/launchpad {:mvn/version "0.1.0-SNAPSHOT"}},
- :aliases {}}
+ :aliases
+ {:vibeflow
+  {:extra-deps
+   {com.github.plexus/vibeflow {:local/root "../vibeflow"}}}
+  }}

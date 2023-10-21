@@ -17,3 +17,11 @@ My dabblings in Overtone.
 * Copyright
 
 Copyright 2013 and later, Arne Brasseur.
+
+
+```
+pw-jack gjacktransport
+~/github/qpwgraph/build/src/qpwgraph
+~/opt/Orca/Orca
+cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
+```
