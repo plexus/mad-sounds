@@ -65,7 +65,7 @@ one every two bars, one every four bars"
   (* level
      (env-gen (adsr attack decay sustain release) :gate gate)
      (sin-osc (midicps note))))
-
+(oscilophone)
 (ctl oscilophone :gate 0)
 
 (def synth1 (synth-maker :note (note :c5) ))

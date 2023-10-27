@@ -15,7 +15,8 @@
         freq  (midicps (mul-add noise 24 saws))
         src   (* 0.4 (sin-osc freq))]
     (comb-n src 1 0.3 2)))
-
+(weirdos)
+(stop)
 (definst pw-gong [note 50 duration 2]
   "Another port of Paul Weineke's gong.
 original (CLM): https://ccrma.stanford.edu/software/snd/snd/clm-ins.scm
@@ -55,8 +56,10 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
      :in (* ampenv
             (sin-osc (+ frequency mod1 mod2 mod3))))))
 
+(pw-gong 60)
+
 (definst plexus-gong [note 60 duration 2 gate 1]
-"Super simple synth, just a single sine wave, but with an envelope like that of a gong"
+  "Super simple synth, just a single sine wave, but with an envelope like that of a gong"
   (let [freq (midicps note)
         env (env-gen (adsr 0.002 (- duration 0.002) 0.001 0.1) :gate gate)]
     (* env
@@ -124,15 +127,17 @@ supercollider: http://varioussmallfires.blogspot.com/2012/01/supercollider-gong.
       (* (saw 440)
          (* (decay2 (impulse (mouse-x 1 200) 0))))
       (mouse-y 440 2000))))
+(stop)
+(impulsar)
 
 (comment
- ((synth
-   (out
-    0
-    (* (mouse-y)
-       (sin-osc
-        (+ 440
-           (* 440 (mouse-x)))))))))
+  ((synth
+    (out
+     0
+     (* (mouse-y)
+        (sin-osc
+         (+ 440
+            (* 440 (mouse-x)))))))))
 
 (comment
   ((synth (out 0

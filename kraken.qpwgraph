@@ -1,0 +1,26 @@
+<!DOCTYPE patchbay>
+<patchbay name="kraken" version="0.5.3.6git.db3a51">
+ <items>
+  <item port-type="pipewire-audio" node-type="pipewire">
+   <output port="Overtone:out_2" node="Overtone"/>
+   <input port="ALC3232 Analog:playback_FR" node="Built-in Audio Analog Stereo"/>
+  </item>
+  <item port-type="pipewire-midi" node-type="pipewire">
+   <output port="Midi Through:Midi Through Port-0" node="Midi-Bridge"/>
+   <input port="kraken:in" node="kraken"/>
+  </item>
+  <item port-type="pipewire-midi" node-type="pipewire">
+   <output port="mixer:midi_out" node="Midi-Bridge"/>
+   <input port="midisnoop:MIDI Input" node="midisnoop"/>
+  </item>
+  <item port-type="pipewire-audio" node-type="pipewire">
+   <output port="Overtone:out_1" node="Overtone"/>
+   <input port="ALC3232 Analog:playback_FL" node="Built-in Audio Analog Stereo"/>
+  </item>
+  <item port-type="pipewire-midi" node-type="pipewire">
+   <output port="mixer:midi_out" node="Midi-Bridge"/>
+   <input port="kraken:in" node="kraken"/>
+  </item>
+ </items>
+</patchbay>
+

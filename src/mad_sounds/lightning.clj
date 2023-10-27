@@ -48,6 +48,8 @@
             (mix [(lpf saw-signal 8000)
                   (/ sin-signal 2)
                   (/ (lf-noise0) 12)])))))
+(stop)
+(swinu4)
 
 (midi-poly-player swinu4)
 
@@ -100,10 +102,14 @@
           filtered (lpf base-sound (mul-add (gendy2 :minfreq 5 :maxfreq 12) 4000 5000))]
       (spring filtered 1000 1)))
 
+  (ronny)
+  (stop)
   (definst ronny2 [note 60 gate 1]
     (let [freq (midicps note)
           base-sound (mix [(saw [freq (* freq 1.1)]) (* (square freq) 0.8) (/ (lf-noise2 (/ freq 2)) 3)])
           filter-mod (mul-add :in (lf-noise0 :freq 25) :mul 1000 :add 7000)
           filtered (lpf base-sound filter-mod)
           with-gendy (+ filtered (/ (gendy2 :minfreq freq :maxfreq (* freq 1.1)) 5))]
-      (* (env-gen (adsr 0.03 0.3 0.1 0.2 1) :gate gate) with-gendy))))
+      (* (env-gen (adsr 0.03 0.3 0.1 0.2 1) :gate gate) with-gendy)))
+  (ronny2)
+  )
