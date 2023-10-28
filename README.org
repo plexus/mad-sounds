@@ -24,4 +24,8 @@ pw-jack gjacktransport
 ~/github/qpwgraph/build/src/qpwgraph
 ~/opt/Orca/Orca
 cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
+midisnoop
+jack-keyboard
+hydrogen
+qjackctl
 ```
