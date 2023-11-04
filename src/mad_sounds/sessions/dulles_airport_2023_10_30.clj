@@ -17,7 +17,7 @@
 
 (def g (guitar))
 (guitar-strum g :E 0.5)
-(reset! overtone.sc.machinery.server.comms/osc-debug* false)
+(reset! overtone.sc.machinery.server.comms/osc-debug* true)
 
 (o/boot-external-server)
 
