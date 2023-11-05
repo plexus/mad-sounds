@@ -54,15 +54,10 @@
                      (cnt (next s))))))
      s)))
 
-(volume 0.1)
+(volume 0.8)
 
 (let [notes (map (partial + 45) (take 45 (euclid-seq 23 13)))]
-  #_  (doseq [note notes]
-        (sampled-piano note)
-        (Thread/sleep 250))
-  (Thread/sleep 500)
-
-  (while true
+  (dotimes [_ 3]
     (dotimes [i 23]
       (when (some #{i} (euclid-beats 23 13))
         (sampled-piano (rand-nth (take 15 notes))))
