@@ -55,15 +55,18 @@
 
 (defonce state (atom init-state))
 
-(defn -bar [bbt] (long (get bbt 0 0)))
-(defn -beat [bbt] (long (get bbt 1 0)))
+(defn -bar [bbt] (get bbt 0 0))
+(defn -beat [bbt] (get bbt 1 0))
 (defn -tick [bbt] (get bbt 2 0))
 
 (defn bbt->ticks
   ([bbt]
    (bbt->ticks bbt @state))
   ([bbt {:keys [beats-per-bar ticks-per-beat]}]
-   (+ (-tick bbt) (* ticks-per-beat (+ (-beat bbt) (* beats-per-bar (-bar bbt)))))))
+   (if (number? bbt)
+     (* ticks-per-beat bbt)
+     (+ (-tick bbt)
+        (* ticks-per-beat (+ (-beat bbt) (* beats-per-bar (-bar bbt))))))))
 
 (defn ticks->bbt
   ([ticks]
@@ -81,16 +84,30 @@
   ([bbt state]
    (ticks->bbt (bbt->ticks bbt state) state)))
 
-(defn bbt< [a b]
+(defn bbt<
+  "Smaller than over bbt triples. Make sure the triples are normalized, bar and
+  beats should both be integer (long)."
+  [a b]
   (let [bar1 (-bar a) beat1 (-beat a) tick1 (-tick a)
         bar2 (-bar b) beat2 (-beat b) tick2 (-tick b)]
+    (assert (int? bar1))
+    (assert (int? bar2))
+    (assert (int? beat1))
+    (assert (int? beat2))
     (or (< bar1 bar2)
         (and (= bar1 bar2) (< beat1 beat2))
         (and (= bar1 bar2) (= beat1 beat2) (< tick1 tick2)))))
 
-(defn bbt<= [a b]
+(defn bbt<=
+  "Smaller than or equal over bbt triples. Make sure the triples are normalized,
+  bar and beats should both be integer (long)."
+  [a b]
   (let [bar1 (-bar a) beat1 (-beat a) tick1 (-tick a)
         bar2 (-bar b) beat2 (-beat b) tick2 (-tick b)]
+    (assert (int? bar1))
+    (assert (int? bar2))
+    (assert (int? beat1))
+    (assert (int? beat2))
     (or (< bar1 bar2)
         (and (= bar1 bar2) (< beat1 beat2))
         (and (= bar1 bar2) (= beat1 beat2) (<= tick1 tick2)))))
@@ -99,32 +116,45 @@
   ([a b]
    (bbt+ a b @state))
   ([a b state]
-   (ticks->bbt (+ (bbt->ticks a state) (bbt->ticks b state)) state)))
+   (preserve-params
+    a
+    (ticks->bbt (+ (bbt->ticks a state) (bbt->ticks b state)) state))))
+
+(defn bbt-
+  ([a b]
+   (bbt- a b @state))
+  ([a b state]
+   (preserve-params
+    a
+    (ticks->bbt (- (bbt->ticks a state) (bbt->ticks b state)) state))))
 
 (defn bbt-mod
   ([num div]
    (bbt-mod num div @state))
   ([num div state]
-   (ticks->bbt (mod (bbt->ticks num state) (bbt->ticks div state)) state)))
+   (preserve-params
+    num
+    (ticks->bbt (mod (bbt->ticks num state) (bbt->ticks div state)) state))))
 
 (defn frames->ticks [frames {:keys [ticks-per-beat frame-rate beats-per-minute]}]
   (*
    (/ frames frame-rate)
    (* ticks-per-beat (/ beats-per-minute 60))))
 
-(defn write-cycle-beats [client cycle-frames
-                         {:keys [bar beat tick ticks-per-beat
-                                 bar-start-tick
-                                 frame frame-rate
-                                 beats-per-minute beats-per-bar beat-type
-                                 playing?
-                                 tracks]
-                          :as state}]
+(defn process-quantum [client cycle-frames
+                       {:keys [bar beat tick ticks-per-beat
+                               bar-start-tick
+                               frame frame-rate
+                               beats-per-minute beats-per-bar beat-type
+                               playing?
+                               tracks]
+                        :as state}]
   (when playing?
     (let [cycle-start [(dec bar) (dec beat) tick]
           cycle-end (bbt+ cycle-start [0 0 (frames->ticks cycle-frames state)])]
-      (doseq [[track-key {:keys [params start end loop? length bangs on-bang]}] tracks
-              :when (and on-bang
+      (doseq [[track-key {:keys [params start end loop? length muted? bangs on-bang]}] tracks
+              :when (and (not muted?)
+                         on-bang
                          (or (not start) (or (bbt<= start cycle-start)
                                              (and (bbt<= cycle-start start)
                                                   (bbt<= start cycle-end))))
@@ -148,7 +178,8 @@
                          (bbt< bang cycle-end))
                 ;; KiSsBoP - key state bang params
                 (on-bang track-key
-                         (dissoc state :tracks) bang
+                         (assoc (dissoc state :tracks) :client client)
+                         bang
                          (merge params (get bang 3)))))))))))
 
 (defn assoc-pos [state ^JackPosition pos]
@@ -164,21 +195,23 @@
          :beats-per-bar (.getBeatsPerBar pos)
          :beat-type (.getBeatType pos)))
 
+(defonce __jack-pos (JackPosition.))
+
 (defn init-sequencer []
-  (let [client (jack/client :vibeflow)
-        jack-pos (JackPosition.)]
+  (let [client (jack/client :vibeflow)]
     (jack/register
      client :process ::my-process
      (fn [client cycle-frames]
-       (let [transport-state (.transportQuery client jack-pos)
+       (let [transport-state (.transportQuery client __jack-pos)
              playing? (= transport-state JackTransportState/JackTransportRolling)
-             new-state (swap! state (fn [state] (assoc (assoc-pos state jack-pos) :playing? playing?)))]
-         #_(print (if playing? ">" ".")) (flush)
-         #_(prn @state)
-         (write-cycle-beats client cycle-frames new-state))
+             old-state @state
+             new-state (swap! state (fn [state] (assoc (assoc-pos state __jack-pos) :playing? playing?)))]
+         (when (not= (select-keys old-state [:beat :bar :tick :playing?])
+                     (select-keys new-state [:beat :bar :tick :playing?]))
+           (process-quantum client cycle-frames new-state)))
        true))))
 
-(defn play-pause! []
+(defn !play []
   (let [client (jack/client :vibeflow)]
     (cond
       (= :rolling (:state (jack/transport-pos client)))
@@ -198,25 +231,40 @@
     (cond
       (number? bang)
       (bbt-norm [0 bang])
-      (any? map? bang)
+      (some map? bang)
       (conj (bbt-norm bang) (some #(when (map? %) %) bang))
       :else
       (bbt-norm bang))))
 
-(defn track [track-key bangs & {:as opts}]
-  (swap! state assoc-in [:tracks track-key] (assoc opts :bangs (norm-bangs bangs))))
+(defn +trck [track-key bangs & {:as opts}]
+  (swap! state update-in [:tracks track-key]
+         merge
+         (assoc opts
+                :bangs (norm-bangs bangs)
+                :loop? false)))
 
-(defn _loop [track-key bangs & {:as opts}]
+(defn +loop [track-key bangs & {:as opts}]
   (let [bangs (norm-bangs bangs)]
-    (swap! state assoc-in [:tracks track-key]
+    (swap! state update-in [:tracks track-key]
+           merge
            (cond-> (assoc opts
                           :bangs bangs
                           :loop? true)
              (not (:length opts))
-             (assoc :length (inc (-bar (ticks->bbt (apply max (map bbt->ticks bangs))))))))))
+             (assoc :length [(inc (-bar (ticks->bbt (apply max (map bbt->ticks bangs)))))])))))
 
-(defn on-bang [track-key f]
+(defn +bang
+  {:style/indent [1]}
+  [track-key f]
   (swap! state assoc-in [:tracks track-key :on-bang] f))
+
+(defn -trck [track-key & _]
+  (swap! state update :tracks dissoc track-key))
+
+(def -loop -trck)
+
+(defn !mute [track-key]
+  (swap! state update-in [:tracks track-key :muted?] not))
 
 (comment
   (init-sequencer))
