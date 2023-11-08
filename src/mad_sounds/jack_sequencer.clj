@@ -112,6 +112,11 @@
         (and (= bar1 bar2) (< beat1 beat2))
         (and (= bar1 bar2) (= beat1 beat2) (<= tick1 tick2)))))
 
+(defn preserve-params [bbt-orig bbt]
+  (if (and (vector? bbt-orig) (some map? bbt-orig))
+    (conj bbt (some #(and (map? %) %) bbt-orig))
+    bbt))
+
 (defn bbt+
   ([a b]
    (bbt+ a b @state))
