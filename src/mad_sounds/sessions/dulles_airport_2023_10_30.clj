@@ -6,6 +6,8 @@
    [overtone.core :as o :refer :all]
    [overtone.synth.stringed :refer :all]))
 
+(require 'overtone.live)
+
 (def midi-in (jack/midi-in-port (jack/client :vibeflow) :in))
 (seq (jack/ports (jack/client :vibeflow)))
 
