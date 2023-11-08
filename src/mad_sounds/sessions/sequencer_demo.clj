@@ -18,6 +18,7 @@
 
 (init-sequencer)
 
+;; Walking bass
 (+loop :bass
        ;; [bar beat tick params]
        [[0 0 0 {:note 36}]
