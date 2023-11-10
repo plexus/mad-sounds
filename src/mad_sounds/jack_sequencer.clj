@@ -24,8 +24,8 @@
                            JackStatus)
    (java.util EnumSet))
   (:require
-   [vibeflow.midi.jack :as jack]
-   [vibeflow.midi.core :as midi]
+   [net.arnebrasseur.cljack :as jack]
+   [net.arnebrasseur.cljack.midi :as midi]
    [clojure.pprint :as pprint]
    [clojure.string :as str]))
 
@@ -47,7 +47,7 @@
    :bar-start-tick 0
    :frame 0
    :frame-rate 44100
-   :playing? false
+   :state :stopped
    :beats-per-minute 120
    :beats-per-bar 4 ;; Together these
    :beat-type 4     ;; form the time signature (4/4)
@@ -72,11 +72,13 @@
   ([ticks]
    (ticks->bbt ticks @state))
   ([ticks {:keys [beats-per-bar ticks-per-beat]}]
-   (let [beat (quot ticks ticks-per-beat)
-         tick (mod ticks ticks-per-beat)
-         bar (quot beat beats-per-bar)
-         beat (mod beat beats-per-bar)]
-     [(long bar) (long beat) tick])))
+   (let [beats-per-bar  (if (zero? beats-per-bar) 4 beats-per-bar)
+         ticks-per-beat (if (zero? ticks-per-beat) 1920 ticks-per-beat)]
+     (let [beat (quot ticks ticks-per-beat)
+           tick (mod ticks ticks-per-beat)
+           bar (quot beat beats-per-bar)
+           beat (mod beat beats-per-bar)]
+       [(long bar) (long beat) tick]))))
 
 (defn bbt-norm
   ([bbt]
@@ -151,10 +153,9 @@
                                bar-start-tick
                                frame frame-rate
                                beats-per-minute beats-per-bar beat-type
-                               playing?
                                tracks]
                         :as state}]
-  (when playing?
+  (when (= :rolling (:state state))
     (let [cycle-start [(dec bar) (dec beat) tick]
           cycle-end (bbt+ cycle-start [0 0 (frames->ticks cycle-frames state)])]
       (doseq [[track-key {:keys [params start end loop? length muted? bangs on-bang]}] tracks
@@ -200,19 +201,19 @@
          :beats-per-bar (.getBeatsPerBar pos)
          :beat-type (.getBeatType pos)))
 
-(defonce __jack-pos (JackPosition.))
-
 (defn init-sequencer []
   (let [client (jack/client :vibeflow)]
     (jack/register
      client :process ::my-process
-     (fn [client cycle-frames]
-       (let [transport-state (.transportQuery client __jack-pos)
-             playing? (= transport-state JackTransportState/JackTransportRolling)
+     (fn [_client cycle-frames]
+       (let [pos (jack/transport-pos client)
+             playing? (= (:state pos) :rolling)
              old-state @state
-             new-state (swap! state (fn [state] (assoc (assoc-pos state __jack-pos) :playing? playing?)))]
-         (when (not= (select-keys old-state [:beat :bar :tick :playing?])
-                     (select-keys new-state [:beat :bar :tick :playing?]))
+             new-state (swap! state (fn [state] (merge state pos)))]
+         (when (and
+                (:bbt (:valid pos))
+                (not= (select-keys old-state [:beat :bar :tick :state])
+                      (select-keys new-state [:beat :bar :tick :state])))
            (process-quantum client cycle-frames new-state)))
        true))))
 

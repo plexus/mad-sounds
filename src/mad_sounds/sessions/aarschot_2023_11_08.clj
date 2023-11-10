@@ -82,7 +82,7 @@
         pan2)))
 (stop!)
 (stop)
-(double-bass 50)
+(double-bass 36)
 
 (jack/start-transport! (jack/client :vibeflow))
 
