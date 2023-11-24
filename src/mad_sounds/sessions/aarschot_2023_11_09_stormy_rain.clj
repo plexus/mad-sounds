@@ -4,9 +4,10 @@
    [mad-sounds.euclid :refer :all]
    [mad-sounds.jack-sequencer :refer :all]
    [overtone.core :as o :refer :all]
-   [overtone.synth.stringed :refer :all]
+   #_[overtone.synth.stringed :refer :all]
    [net.arnebrasseur.cljack :as jack]
    [net.arnebrasseur.cljack.transport-leader :as transport]))
+
 
 (boot-server)
 #_(boot-external-server)
@@ -42,18 +43,20 @@
            :damp 1)))
   (Thread/sleep 500))
 
+(def snare-fat (freesound 122053))
+
 (definst bass [note 36]
   (let [freq (midicps note)
         base (+ (* (env-gen (adsr 0.5 0.95 0 0) :action FREE)
                    (sin-osc freq)
                    0.7)
-                (* (pluck #_(pan2 (brown-noise))
-                          (play-buf 2#_(:id snare-fat))
-                          :trig 1
-                          :maxdelaytime 0.25
-                          :delaytime (/ 1 freq)
-                          :decaytime 2.3
-                          :coef 0.3)))]
+                (* (pluck
+                    (play-buf 2 (:id snare-fat))
+                    :trig 1
+                    :maxdelaytime 0.25
+                    :delaytime (/ 1 freq)
+                    :decaytime 2.3
+                    :coef 0.3)))]
     (free-verb
      (+ (lpf base 800)
         (rlpf base (* 2 freq) 0.1))
@@ -61,7 +64,7 @@
      :room 0.2
      :damp 1)))
 
-(bass 40)
+(bass 38)
 (init-sequencer)
 (transport/initialize!)
 
