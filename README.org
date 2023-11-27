@@ -1,31 +1,41 @@
-* mad-sounds
+#+TITLE: VIBEFLOW
+
+```
+____   ____._____.           _____.__
+\   \ /   /|__\_ |__   _____/ ____\  |   ______  _  __
+ \   Y   / |  || __ \_/ __ \   __\|  |  /  _ \ \/ \/ /
+  \     /  |  || \_\ \  ___/|  |  |  |_(  <_> )     /
+   \___/   |__||___  /\___  >__|  |____/\____/ \/\_/
+                   \/     \/
+```
+
+All rights reserved.
 
 My dabblings in Overtone.
 
 * Links
 
-  - [[http://vishnumenon.com/2013/06/25/musical-chains-music-generation-with-clojure/][Overtone + Markov Chains]]
-  - [[http://www.soundonsound.com/sos/allsynthsecrets.htm]["Synth Secrets" by Sound-on-Sound]]
-  - [[http://blog.josephwilk.net/clojure/creating-instruments-with-overtone.html][Creating Instruments with Overtone (Joseph Wilk)]]
+- [[http://vishnumenon.com/2013/06/25/musical-chains-music-generation-with-clojure/][Overtone + Markov Chains]]
+- [[http://www.soundonsound.com/sos/allsynthsecrets.htm]["Synth Secrets" by Sound-on-Sound]]
+- [[http://blog.josephwilk.net/clojure/creating-instruments-with-overtone.html][Creating Instruments with Overtone (Joseph Wilk)]]
 
 ** SuperCollider Docs
 
-   - [[http://doc.sccode.org/Browse.html#UGens][Browse all UGens]]
-   - [[http://doc.sccode.org/Guides/Tour_of_UGens.html][A Tour of UGens]]
-   - [[http://doc.sccode.org/Guides/UGens-and-Synths.html][UGens and Synths]]
+- [[http://doc.sccode.org/Browse.html#UGens][Browse all UGens]]
+- [[http://doc.sccode.org/Guides/Tour_of_UGens.html][A Tour of UGens]]
+- [[http://doc.sccode.org/Guides/UGens-and-Synths.html][UGens and Synths]]
 
 * Copyright
 
-Copyright 2013 and later, Arne Brasseur.
+Copyright 2013-2023, Arne Brasseur.
 
-
-```
-pw-jack gjacktransport
-~/github/qpwgraph/build/src/qpwgraph
-~/opt/Orca/Orca
-cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
-midisnoop
-jack-keyboard
-hydrogen
-qjackctl
-```
+# ```
+# pw-jack gjacktransport
+# ~/github/qpwgraph/build/src/qpwgraph
+# ~/opt/Orca/Orca
+# cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
+# midisnoop
+# jack-keyboard
+# hydrogen
+# qjackctl
+# ```

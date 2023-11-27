@@ -4,7 +4,8 @@
    [overtone.music.pitch :as pitch]
    [casa.squid.jack :as jack]))
 
-(connect-external-server)
+(boot-server)
+#_(connect-external-server)
 
 (jack/connect!
  (map vector
