@@ -10,6 +10,6 @@
 
   org.clojure/data.xml           {:mvn/version "0.2.0-alpha8"}
   enlive/enlive                  {:mvn/version "1.1.6"}
-  quil/quil                      {:mvn/version "3.1.0"}
+  quil/quil                      {:mvn/version "4.3.1323"}
   }
  }
