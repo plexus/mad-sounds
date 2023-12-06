@@ -2,6 +2,8 @@
   (:require
    [casa.squid.jack :as jack]))
 
+(require '[casa.squid.jack :as jack])
+
 (defn overtone-ports []
   (filter #(re-find #"Overtone|SuperCollider" %)
           (jack/ports @jack/default-client #{:audio :out})))
@@ -10,3 +12,5 @@
   (map vector
        (overtone-ports)
        (jack/ports @jack/default-client #{:audio :physical :in})))
+
+(jack/connect (overtone-conns))

@@ -8,7 +8,7 @@
   casa.squid/sequencer           {:local/root "/home/arne/Overtone/sequencer"}
   ch.qos.logback/logback-classic {:mvn/version "1.4.11"}
 
-  overtone/overtone-gui {:local/root "/home/arne/Overtone/overtone-gui"}
+  ;; overtone/overtone-gui {:local/root "/home/arne/Overtone/overtone-gui"}
 
   org.clojure/data.xml           {:mvn/version "0.2.0-alpha8"}
   enlive/enlive                  {:mvn/version "1.1.6"}
