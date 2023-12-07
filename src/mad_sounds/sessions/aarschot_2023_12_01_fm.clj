@@ -7,8 +7,7 @@
    [overtone.gui.control :as gui-control]
    [vibeflow.util :as util]))
 
-(jack/connect!
- (util/overtone-conns))
+(jack/connect! (util/overtone-conns))
 
 (definst fm-stuff [note {:default 60 :min 0 :max 120 :step 1}
                    mod-interval {:default 0 :min -12 :max 24 :step 1}
