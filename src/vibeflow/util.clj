@@ -1,7 +1,8 @@
 (ns vibeflow.util
   (:require
-   [overtone.core :as o]
-   [casa.squid.jack :as jack]))
+   [casa.squid.jack :as jack]
+   [clojure.java.shell :as sh]
+   [overtone.core :as o]))
 
 (defn overtone-ports []
   (filter #(re-find #"Overtone|SuperCollider" %)
@@ -63,3 +64,20 @@
                        (for [{:keys [name default value]} (:params synth)
                              :when (not= default @value)]
                          [(keyword name) @value]))))))
+
+(defn spectro []
+  (future
+    (sh/sh "pw-jack" "wolf-spectrum"))
+  (future
+    (loop []
+      (if (not (some #{"Wolf Spectrum:in1"} (jack/ports)))
+        (do
+          (Thread/sleep 500)
+          (recur))
+        (doseq [[from to] [["SuperCollider:out_1" "Wolf Spectrum:in1"]
+                           ["SuperCollider:out_2" "Wolf Spectrum:in2"]
+                           ["Overtone:out_1" "Wolf Spectrum:in1"]
+                           ["Overtone:out_2" "Wolf Spectrum:in2"]]]
+          (try
+            (jack/connect from to)
+            (catch Exception _)))))))

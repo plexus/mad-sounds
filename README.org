@@ -19,6 +19,10 @@ My dabblings in Overtone.
 - [[http://www.soundonsound.com/sos/allsynthsecrets.htm]["Synth Secrets" by Sound-on-Sound]]
 - [[http://blog.josephwilk.net/clojure/creating-instruments-with-overtone.html][Creating Instruments with Overtone (Joseph Wilk)]]
 
+** Sounds and samples
+
+- https://archive.org/details/usc-sound-effect-archive
+
 ** SuperCollider Docs
 
 - [[http://doc.sccode.org/Browse.html#UGens][Browse all UGens]]
@@ -39,3 +43,4 @@ Copyright 2013-2023, Arne Brasseur.
 # hydrogen
 # qjackctl
 # ```
+
