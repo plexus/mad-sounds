@@ -120,8 +120,10 @@
         (draw child (+ x (* idx cw)) y cw h)))))
 
 (defn draw-root [c]
-  (set-prop! :background (prop :background))
-  (draw c 0 0 (q/width) (q/height)))
+  (when (:dirty? (meta c))
+    (set-prop! :background (prop :background))
+    (alter-meta! c assoc :dirty? false)
+    (draw (c) 0 0 (q/width) (q/height))))
 
 ;; - location
 ;; - bounds
@@ -139,7 +141,9 @@
 (defn setup []
   (init-props! defaults))
 
-(def root
+(defn app
+  {:dirty? true}
+  []
   (->RowsC
    [(->OutlineC
      (->TextC "Hello" {:fill [54 121 44]
@@ -162,7 +166,7 @@
 
 (defn draw-fn []
   (with-props defaults
-    (draw-root @#'root)))
+    (draw-root #'app)))
 
 (q/defsketch example
   :title "UI test"
