@@ -55,9 +55,12 @@
 
 (util/capture-ctls bell1)
 
-(ctl bell1 :decay 0.14 :sustain 0.39 :release 0.28 :depth 1.0 :detune 6/127)
+(do
+  (bell1 :note 75)
+  (Thread/sleep 100)
+  (ctl bell1 :gate 0))
 
-(:params bell1)
+(ctl bell1 :decay 0.14 :sustain 0.39 :release 0.28 :depth 1.0 :detune 6/127)
 
 (util/midi-preview :b #'bell1)
 (util/midi-ctl :b #'bell1 {21 :depth

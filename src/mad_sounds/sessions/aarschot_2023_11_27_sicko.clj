@@ -16,6 +16,9 @@
        (filter #(re-find #"jaaa" %)
                (jack/ports @jack/default-client #{:audio :in})))))
 
+;;;;;
+
+
 (definst fm [freq 440 ratio 3 depth 300]
   (let [mod (sin-osc :freq (* freq (floor ratio)))
         car (sin-osc :freq (+ freq (* mod depth)))
@@ -24,7 +27,7 @@
 
 (def pool (at/mk-pool))
 
-(at/every 1000 #(apply fm (apply concat @midi-state)) pool)
+(at/every 1000 #(fm) pool)
 (run! at/kill (at/scheduled-jobs pool))
 (stop)
 

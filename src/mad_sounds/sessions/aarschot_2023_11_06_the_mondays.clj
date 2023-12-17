@@ -2,10 +2,8 @@
   (:require
    [clojure.string :as str]
    [mad-sounds.euclid :refer :all]
-   [mad-sounds.jack-sequencer :refer :all]
    [overtone.core :as o :refer :all]
-
-   [vibeflow.midi.jack :as jack]))
+   [casa.squid.jack :as jack]))
 
 (boot-server)
 (jack/connect!
@@ -15,14 +13,10 @@
 
 (require '[overtone.inst.synth :as synth])
 
-(map (comp (partial list 'demo) #(symbol "synth" (str %)) key)
-     (sort-by
-      #(:line (meta (val %)))
-      (ns-publics (the-ns (symbol (namespace `synth/_))))))
-
+(stop)
 (synth/simple-flute)
 (synth/cs80lead)
-(synth/supersaw)
+(synth/supersaw :freq 300)
 (synth/ticker)
 (synth/ping)
 (synth/tb303)

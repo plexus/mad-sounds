@@ -3,11 +3,9 @@
    [clojure.string :as str]
    [mad-sounds.euclid :refer :all]
    [overtone.core :as o :refer :all]
-   [overtone.inst.percussion :refer :all]
    [overtone.inst.sampled-piano :refer [sampled-piano]]
+   #_[overtone.inst.sampled-trumpet :refer [sampled-trumpet]]
    [vibeflow.midi.jack :as jack]))
-
-(piano)
 
 (boot-server)
 
@@ -63,21 +61,21 @@
         (sampled-piano (rand-nth (take 15 notes))))
       (Thread/sleep (rand-nth [175 #_350])))
 
-    (Thread/sleep 700)
+    (Thread/sleep 200)
 
     (dotimes [i 21]
       (when (some #{i} (euclid-beats 21 13))
         (sampled-piano (rand-nth (take 9 (drop 12 notes)))))
       (Thread/sleep (rand-nth [125 #_250])))
 
-    (Thread/sleep 500)
+    (Thread/sleep 200)
 
     (dotimes [i 23]
       (when (some #{i} (euclid-beats 23 13))
         (sampled-piano (rand-nth (take 13 (drop 5 notes)))))
       (Thread/sleep (rand-nth [150 #_300])))
 
-    (Thread/sleep 600)
+    (Thread/sleep 200)
     ))
 
 (Thread/sleep (rand-nth [250 500 125]))

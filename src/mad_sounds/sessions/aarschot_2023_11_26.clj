@@ -13,16 +13,19 @@
 (definst g [knum 12]
   (gendy3 :knum knum))
 
+(g)
 (kill g)
 
 (ctl g :knum 6)
 
 (demo (var-saw :width 0.8))
-(demo 2 (-> (formant :fundfreq 300 :formfreq
+(demo 2 (-> (formant
+             :fundfreq 300
+             :formfreq (* (vibrato :freq 2 :rate 20)
+                          (+ 600 (* 3000 (abs (lf-saw:kr 0.2))))))
+            (rlpf :freq 3000)
+            pan2))
 
-                     (* (vibrato :freq 3 :rate 40)
-                        (+ 600 (* 3000 (abs (lf-saw:kr 0.2))))))
-            (rlpf :freq 3000)))
 resonz one-pole one-zero two-pole two-zero apf
 integrator decay decay2 lag lag2 lag3 ramp lag-ud
 lag2-ud lag3-ud leak-dc rlpf rhpf hpf bpf brf

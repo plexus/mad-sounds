@@ -3,8 +3,8 @@
    [clojure.string :as str]
    [mad-sounds.euclid :refer :all]
    [overtone.core :as o :refer :all]
-   [vibeflow.midi.jack :as jack]
-   [mad-sounds.jack-sequencer :refer :all]))
+   [casa.squid.jack :as jack]
+   [casa.squid.sequencer :refer :all]))
 
 (boot-server)
 
@@ -27,13 +27,15 @@
                       0.2 0.1))))
 
 (!mute :kick)
+(!mute :hat)
 state
 
 (bbt->ticks [0 0.25])
 
 (drum/snare)
-(!mute :kick)
-(play-pause!)
+(!mute :eights)
+(!play)
+(stop)
 (stop!)
 
 ;; loud click at the end

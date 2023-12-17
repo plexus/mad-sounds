@@ -4,7 +4,7 @@
    [overtone.at-at :as at]
    [overtone.live :refer :all]
    [overtone.studio.midi :as midi]
-   [overtone.gui.control :as gui-control]
+   #_[overtone.gui.control :as gui-control]
    [vibeflow.util :as util]))
 
 (jack/connect! (util/overtone-conns))

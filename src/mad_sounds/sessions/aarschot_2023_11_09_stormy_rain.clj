@@ -2,11 +2,11 @@
   (:require
    [clojure.string :as str]
    [mad-sounds.euclid :refer :all]
-   [mad-sounds.jack-sequencer :refer :all]
+   [casa.squid.sequencer :refer :all]
    [overtone.core :as o :refer :all]
    #_[overtone.synth.stringed :refer :all]
-   [net.arnebrasseur.cljack :as jack]
-   [net.arnebrasseur.cljack.transport-leader :as transport]))
+   [casa.squid.jack :as jack]
+   [casa.squid.jack.transport-leader :as transport]))
 
 
 (boot-server)
@@ -100,6 +100,6 @@ state
 (jack/seek-transport! 0)
 (stop!)
 
-(swap! transport/timing assoc :beats-per-minute 90)
+(swap! transport/timing assoc :beats-per-minute 120)
 
 (base)

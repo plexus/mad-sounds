@@ -1,11 +1,11 @@
-(ns mad-sounds.sessions.aarschot-2023-11-08
+(ns mad-sounds.sessions.aarschot-2023-11-08-walking-bass
   (:require
    [clojure.string :as str]
    [mad-sounds.euclid :refer :all]
-   [mad-sounds.jack-sequencer :refer :all]
+   [casa.squid.sequencer :refer :all]
    [overtone.core :as o :refer :all]
    [overtone.synth.stringed :refer :all]
-   [vibeflow.midi.jack :as jack]))
+   [casa.squid.jack :as jack]))
 
 (boot-server)
 #_(boot-external-server)
@@ -74,15 +74,17 @@
         src1 (/ (* src (+ 1 k)) (+ 1 (* k (abs src))))
         ]
     (-> (+ src1 #_src2 )
-        (* (env-gen (asr 0.0001 1 0.5) :action FREE))
+        (* (env-gen (adsr 0.0001 0.3 0.2 0.5) :action FREE))
         (* 1)
-        (rlpf (* 2 freq) 0.3)
-        (+
-         (* 0.5 (rlpf src1 freq 0.5)))
+        (rlpf (* 2.5 freq) 0.1)
+        #_(+
+           (* 0.5 (rlpf src1 freq 0.5)))
         pan2)))
 (stop!)
 (stop)
+(double-bass 32)
 (double-bass 36)
+(double-bass 40)
 
 (jack/start-transport! (jack/client :vibeflow))
 
@@ -110,8 +112,11 @@
 
 (+bang :bass (fn [k s b p]
                (at (+ (now) (rand-int 20))
-                   (double-bass (:note p)))))
+                 (double-bass (:note p)))))
 
+(!play)
+(swap! casa.squid.jack.transport-leader/timing assoc :beats-per-minute 120)
+(swap! state assoc :tracks {})
 state
 (init-sequencer)
 (jack/start-transport! (jack/client :vibeflow))
