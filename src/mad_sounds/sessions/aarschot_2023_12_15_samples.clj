@@ -19,11 +19,11 @@
 
 (Gst/init Version/BASELINE)
 
-(.play
+(.play (Gst/parseLaunch (str "playbin uri=" (pr-str (str (.toURI (io/file sample)))))))
 
- (Gst/parseLaunch (str "playbin uri=" (pr-str (str (.toURI (io/file sample)))))))
-
-(Gst/parseLaunch "playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm")
+(clojure.reflect/reflect
+ org.freedesktop.gstreamer.Element
+ #_(Gst/parseLaunch "playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm"))
 
 (def ^:dynamic *drawing-stack* {})
 

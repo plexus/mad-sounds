@@ -7,14 +7,14 @@
   casa.squid/jack                {:local/root "/home/arne/Overtone/jack"}
   casa.squid/sequencer           {:local/root "/home/arne/Overtone/sequencer"}
   ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
-
+  lambdaisland/data-printers     {:mvn/version "0.7.47"}
   ;; overtone/overtone-gui {:local/root "/home/arne/Overtone/overtone-gui"}
 
-  org.clojure/data.xml           {:mvn/version "0.2.0-alpha8"}
-  enlive/enlive                  {:mvn/version "1.1.6"}
-  quil/quil                      {:mvn/version "4.3.1323"}
+  org.clojure/data.xml {:mvn/version "0.2.0-alpha8"}
+  enlive/enlive        {:mvn/version "1.1.6"}
+  quil/quil            {:mvn/version "4.3.1323"}
 
-  org.jflac/jflac-codec {:mvn/version "1.5.2"}
+  org.jflac/jflac-codec                    {:mvn/version "1.5.2"}
   org.freedesktop.gstreamer/gst1-java-core {:mvn/version "1.4.0"}
   }
  }

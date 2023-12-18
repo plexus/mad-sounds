@@ -1,10 +1,19 @@
-(ns mad-sounds.sessions.aarschot-2023-12-15-ui
+(ns casa.squid.plasticine
+  "Moldable clay UI lib for Quil"
   (:require
    [clojure.java.io :as io]
    [quil.core :as q]))
 
+;; - A component is an atom with metadata
+;; - Functions in the metadata act as methods
+;; - The atom itself is its state/model
+;; - The top level component is the root and does some extra book-keeping
+;;   - :dirty? on the root will cause the whole UI to redraw (as does resizing the window)
+;;   - :focused is the element that will receive keyboard events
+
 (def ^:dynamic *drawing-stack* {})
 (def ^:dynamic *drawing-component* nil)
+(def ^:dynamic *root* nil)
 
 (def quil-setter
   (memoize
@@ -49,6 +58,26 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn find-root [c]
+  (if-let [p (:parent (meta c))]
+    (recur p)
+    c))
+
+(defn mark-dirty! [c]
+  (alter-meta! (find-root c) assoc :dirty? true)
+  c)
+
+(defn dispatch [c method & args]
+  (when-let [f (get (meta c) method)]
+    (apply f c args)))
+
+(defn dispatch! [c method & args]
+  (if-let [f (get (meta c) method)]
+    (apply f c args)
+    (throw (ex-info (str "No method " method " in " (keys (meta c)))
+                    {:state @c
+                     :meta (meta c)}))))
+
 (defmacro defdispatch [n args & default]
   (let [kw (keyword n)]
     `(defn ~n [~@args]
@@ -60,9 +89,19 @@
 (defdispatch -min-size [this] [0 0])
 (defdispatch -max-size [this] [Long/MAX_VALUE Long/MAX_VALUE])
 (defdispatch -pref-size [this] [100 100])
-(defdispatch -key-pressed [this])
+
+(defdispatch -key-pressed [this]
+  (let [keymap (:key-pressed-map (meta this))]
+    (when-let [f (get keymap (q/key-as-keyword)
+                      (get keymap (q/key-code)))]
+      (f this))))
+
 (defdispatch -key-released [this])
 (defdispatch -key-typed [this])
+(defdispatch on-model-changed [this old new]
+  (when (not= old new)
+    (mark-dirty! this)))
+
 ;; (defdispatch -mouse-entered [this])
 ;; (defdispatch -mouse-exited [this])
 ;; (defdispatch -mouse-pressed [this])
@@ -79,11 +118,6 @@
         (apply f cval args))
       (apply f cval args))))
 
-(defn find-root [c]
-  (if-let [p (:parent (meta c))]
-    (recur p)
-    c))
-
 (defn draw [c x y w h]
   (alter-meta! c assoc :parent *drawing-component*)
   (let [root (find-root c)]
@@ -92,7 +126,8 @@
       (alter-meta! root assoc :focused c)))
   (binding [*drawing-component* c]
     (delegate c -draw x y w h))
-  (swap! c assoc :bounds [x y w h]))
+  (swap! c assoc :bounds [x y w h])
+  (add-watch c ::rerender (fn [k r o n] (on-model-changed c o n))))
 
 (defn min-size [c] (delegate c -min-size))
 (defn max-size [c] (delegate c -max-size))
@@ -168,7 +203,7 @@
           y (apply min (map (fn [_ _ y _ _] y) layout))]
       [(- (apply max (map (fn [_ x _ w _] (+ x w)) layout)) x)
        (- (apply max (map (fn [_ _ y _ h] (+ y h)) layout)) y)])
-    (default-max-size)))
+    [Long/MAX_VALUE Long/MAX_VALUE]))
 
 ;;;;;;;;;;;;;;;
 ;; API
@@ -212,14 +247,10 @@
         (q/rect x y w h)))
     (draw child x y w h)))
 
-(defn mark-dirty! [c]
-  (swap! (find-root c) assoc :dirty? true)
-  c)
-
 (defn select-list [children]
   (atom
    {:children   children
-    :layout-f   stack
+    :layout-f   layout-stack
     :index      0}
    :meta
    {:focusable? true
@@ -227,65 +258,63 @@
     :-min-size  #'container-size
     :-pref-size #'container-size
     :-max-size  #'container-size
-    :-key-pressed (fn [this]
-                    (case (q/key-as-keyword)
-                      :down (swap! this update :index inc)
-                      :up  (swap! this update :index dec)
-                      nil)
-                    (mark-dirty! this))}))
+    :key-pressed-map
+    {:down
+     (fn [this]
+       (swap! this update :index
+              (fn [i]
+                (min (inc i) (dec (count (:children @this))))))
+       (dispatch this :on-index-changed (:index @this)))
+     :up
+     (fn [this]
+       (swap! this update :index
+              (fn [i]
+                (max 0 (dec i))))
+       (dispatch this :on-index-changed (:index @this)))}}))
+
+(defn hslider-draw [{:keys [min max step value
+                            height color bg-color]} x y w h]
+  (with-props {:stroke-weight 1}
+    (with-props {:fill bg-color}
+      (q/rect x y w h))
+    (with-props {:fill color}
+      (q/rect x y (/ (* w value) (- max min)) h)))
+  (with-props {:text-align :center}
+    (q/text (str value)
+            (+ x (/ w 2))
+            (+ y (/ h 2) (/ (prop :text-size) 3)))))
+
+(defn hslider-size [c]
+  [Long/MAX_VALUE (:height c)])
+
+(defn hslider [{:keys [min max step value
+                       height color]}]
+  (atom
+   {:min (or min 0)
+    :max max
+    :step step
+    :value (or value min 0)
+    :height (or height 30)
+    :color (or color [73 175 157])}
+   :meta
+   {:-draw #'hslider-draw
+    :-pref-size #'hslider-size}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn draw-root [c]
-  (when (or (:dirty? @c)
+  (when (or (:dirty? (meta c))
             (not= [0 0 (q/width) (q/height)] (:bounds @c)))
-    (swap! c assoc :dirty? false)
+    (alter-meta! c assoc :dirty? false)
     (set-prop! :background (prop :background))
     (draw c 0 0 (q/width) (q/height))))
 
-;;;;;;;;;;;;
-
-;; - location
-;; - bounds
-
-(def defaults
-  {:text-size 110
-   :frame-rate 30
-   :stroke [0 0 0]
-   :fill [26 191 72]
-   :stroke-weight 15
-   :background [235 214 125]
-   :rect-mode :corner
-   :stroke-cap :round})
-
-(defn setup []
-  (init-props! defaults))
-
-(def app
-  (mark-dirty!
-   (select-list
-    [(text-c "Hello" :fill [54 121 44] :text-size 50)
-     (text-c "Hello" :fill [54 121 44] :text-size 50)
-     (text-c "Hello" :fill [54 121 44] :text-size 50)
-     ])))
-
-(defn draw-fn []
-  (with-props defaults
-    (draw-root app)))
-
-(defn key-pressed-fn [root] (-key-pressed (:focused (meta root))))
-(defn key-released-fn [root] (-key-released (:focused (meta root))))
-(defn key-typed-fn [root] (-key-typed (:focused (meta root))))
-
-(q/defsketch example
-  :title "UI test"
-  :settings #(q/smooth 2) ;; Turn on anti-aliasing
-  :features [:resizable :keep-on-top]
-  :setup #'setup
-  :draw #'draw-fn
-  :key-pressed (partial #'key-pressed-fn app)
-  :key-released (partial #'key-released-fn app)
-  :key-typed (partial #'key-typed-fn app)
-  :size [323 200])
-
-(alter-var-root #'quil.applet/*applet* (constantly example))
+(defn middleware [{:ui/keys [root defaults] :as options}]
+  (assoc options
+         :setup #(init-props! defaults)
+         :draw  #(with-props defaults
+                   (draw-root root))
+         :key-pressed #(-key-pressed (:focused (meta root)))
+         :key-released #(-key-released (:focused (meta root)))
+         :key-typed #(-key-typed (:focused (meta root)))
+         ))
