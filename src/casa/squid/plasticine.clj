@@ -98,18 +98,10 @@
 
 (defdispatch -key-released [this])
 (defdispatch -key-typed [this])
+
 (defdispatch on-model-changed [this old new]
   (when (not= old new)
     (mark-dirty! this)))
-
-;; (defdispatch -mouse-entered [this])
-;; (defdispatch -mouse-exited [this])
-;; (defdispatch -mouse-pressed [this])
-;; (defdispatch -mouse-released [this])
-;; (defdispatch -mouse-clicked [this])
-;; (defdispatch -mouse-moved [this])
-;; (defdispatch -mouse-dragged [this])
-;; (defdispatch -mouse-wheel [this])
 
 (defn delegate [c f & args]
   (let [cval (with-meta @c (meta c))]
@@ -133,7 +125,7 @@
 (defn max-size [c] (delegate c -max-size))
 (defn pref-size [c] (delegate c -pref-size))
 
-(defn c-text-draw [{:keys [text props]} x y w h]
+(defn text-draw [{:keys [text props]} x y w h]
   (let [tw (q/text-width text)
         th (prop :text-size 12)]
     (q/text text
@@ -142,15 +134,15 @@
             w
             h)))
 
-(defn c-text-min-size [{:keys [text]}]
+(defn text-min-size [{:keys [text]}]
   [(q/text-width text) (prop :text-size 12)])
 
-(defn c-text-pref-size [{:keys [text]}]
+(defn text-pref-size [{:keys [text]}]
   (let [text-size (prop :text-size 12)]
     [(+ (q/text-width text) text-size)
      (* 2 text-size)]))
 
-(defn c-outline-draw [{:keys [child props]} x y w h]
+(defn outline-draw [{:keys [child props]} x y w h]
   (let [sw (prop :stroke-weight)
         x (+ x (/ sw 2))
         y (+ y (/ sw 2))
@@ -166,7 +158,7 @@
           (- w sw )
           (- h sw ))))
 
-(defn c-outline-delegate-size [size-f]
+(defn outline-delegate-size [size-f]
   (fn [{:keys [child]}]
     (let [sw (prop :stroke-weight)
           [w h] (size-f child)]
@@ -205,33 +197,56 @@
        (- (apply max (map (fn [_ _ y _ h] (+ y h)) layout)) y)])
     [Long/MAX_VALUE Long/MAX_VALUE]))
 
+(defn dispatch-mouse-event [c e]
+  ;; dispatch both a generic `:-mouse-event`, and a specific event e.g.
+  ;; `:-mouse-clicked`. Components can implement one or the other. The generic
+  ;; event is convenient for implementing forwarding logic.
+  (dispatch c :-mouse-event e)
+  (dispatch c (keyword (str "-" (name (:type e)))) e))
+
+(defn forward-mouse-event [parent e]
+  (let [{:keys [child children]} @parent
+        {:keys [x y type]} e]
+    (doseq [c (if child [child] children)
+            :let [[cx cy cw ch] (:bounds @c)]]
+      (when (and (<= cx x (+ cx cw))
+                 (<= cy y (+ cy ch)))
+        (prn (meta c) e)
+        (dispatch-mouse-event c e)))))
+
 ;;;;;;;;;;;;;;;
 ;; API
-(defn text-c [text & {:as props}]
-  (atom
-   {:text text :props props}
-   :meta
-   {:-draw      #'c-text-draw
-    :-min-size  #'c-text-min-size
-    :-pref-size #'c-text-pref-size}))
 
-(defn outline-c [child & {:as props}]
-  (atom
-   {:text child :props props}
-   :meta
-   {:-draw      #'c-outline-draw
-    :-min-size  (c-outline-delegate-size min-size)
-    :-pref-size (c-outline-delegate-size pref-size)}))
+(def text-meta
+  {:-draw      #'text-draw
+   :-min-size  #'text-min-size
+   :-pref-size #'text-pref-size})
+
+(defn text [text & {:as props}]
+  (atom {:text text :props props}
+        :meta text-meta))
+
+(def outline-meta
+  {:-draw        #'outline-draw
+   :-min-size    (outline-delegate-size min-size)
+   :-pref-size   (outline-delegate-size pref-size)
+   :-mouse-event #'forward-mouse-event})
+
+(defn outline [child & {:as props}]
+  (atom {:text child :props props}
+        :meta outline-meta))
+
+(def container-meta
+  {:-draw        #'container-draw
+   :-min-size    #'container-size
+   :-pref-size   #'container-size
+   :-max-size    #'container-size
+   :-mouse-event #'forward-mouse-event})
 
 (defn container [children layout-f]
-  (atom
-   {:children children
-    :layout-f layout-f}
-   :meta
-   {:-draw      #'container-draw
-    :-min-size  #'container-size
-    :-pref-size #'container-size
-    :-max-size  #'container-size}))
+  (atom {:children children
+         :layout-f layout-f}
+        :meta container-meta))
 
 (defn rows [children] (container children layout-rows))
 (defn cols [children] (container children layout-cols))
@@ -247,30 +262,31 @@
         (q/rect x y w h)))
     (draw child x y w h)))
 
+(def select-list-meta
+  {:-draw        #'select-list-draw
+   :-min-size    #'container-size
+   :-pref-size   #'container-size
+   :-max-size    #'container-size
+   :focusable?   true
+   :key-pressed-map
+   {:down
+    (fn [this]
+      (swap! this update :index
+             (fn [i]
+               (min (inc i) (dec (count (:children @this))))))
+      (dispatch this :on-index-changed (:index @this)))
+    :up
+    (fn [this]
+      (swap! this update :index
+             (fn [i]
+               (max 0 (dec i))))
+      (dispatch this :on-index-changed (:index @this)))}})
+
 (defn select-list [children]
-  (atom
-   {:children   children
-    :layout-f   layout-stack
-    :index      0}
-   :meta
-   {:focusable? true
-    :-draw      #'select-list-draw
-    :-min-size  #'container-size
-    :-pref-size #'container-size
-    :-max-size  #'container-size
-    :key-pressed-map
-    {:down
-     (fn [this]
-       (swap! this update :index
-              (fn [i]
-                (min (inc i) (dec (count (:children @this))))))
-       (dispatch this :on-index-changed (:index @this)))
-     :up
-     (fn [this]
-       (swap! this update :index
-              (fn [i]
-                (max 0 (dec i))))
-       (dispatch this :on-index-changed (:index @this)))}}))
+  (atom {:children   children
+         :layout-f   layout-stack
+         :index      0}
+        :meta select-list-meta))
 
 (defn hslider-draw [{:keys [min max step value
                             height color bg-color]} x y w h]
@@ -287,6 +303,21 @@
 (defn hslider-size [c]
   [Long/MAX_VALUE (:height c)])
 
+(defn hslider-mouse-pressed [c {:keys [x y]}]
+  (swap! c
+         (fn [{:keys [bounds min max] :as cv}]
+           (let [[cx _ cw _] bounds]
+             (assoc cv :value
+                    (* (- max min)
+                       (/ (- x cx) cw)))))))
+
+(def hslider-meta
+  {:-draw          #'hslider-draw
+   :-pref-size     #'hslider-size
+   :-mouse-pressed #'hslider-mouse-pressed
+   :-mouse-dragged #'hslider-mouse-pressed
+   })
+
 (defn hslider [{:keys [min max step value
                        height color]}]
   (atom
@@ -297,8 +328,7 @@
     :height (or height 30)
     :color (or color [73 175 157])}
    :meta
-   {:-draw #'hslider-draw
-    :-pref-size #'hslider-size}))
+   hslider-meta))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -309,12 +339,38 @@
     (set-prop! :background (prop :background))
     (draw c 0 0 (q/width) (q/height))))
 
-(defn middleware [{:ui/keys [root defaults] :as options}]
+(defn mouse-event-handler [c t]
+  (dispatch-mouse-event
+   c
+   {:type t
+    :x (q/mouse-x)
+    :y (q/mouse-y)
+    :button (q/mouse-button)
+    :pressed? (q/mouse-pressed?)}))
+
+(defn mouse-wheel-event-handler [c i]
+  (dispatch-mouse-event
+   c
+   {:type :mouse-wheel
+    :x (q/mouse-x)
+    :y (q/mouse-y)
+    :button (q/mouse-button)
+    :pressed? (q/mouse-pressed?)
+    :wheel-rotation i}))
+
+(defn middleware [{::keys [root defaults] :as options}]
   (assoc options
-         :setup #(init-props! defaults)
-         :draw  #(with-props defaults
-                   (draw-root root))
-         :key-pressed #(-key-pressed (:focused (meta root)))
-         :key-released #(-key-released (:focused (meta root)))
-         :key-typed #(-key-typed (:focused (meta root)))
-         ))
+         :setup          #(init-props! defaults)
+         :draw           #(with-props defaults (draw-root @root))
+         :key-pressed    #(-key-pressed (:focused (meta @root)))
+         :key-released   #(-key-released (:focused (meta @root)))
+         :key-typed      #(-key-typed (:focused (meta @root)))
+         :key-typed      #(-key-typed (:focused (meta @root)))
+         :mouse-entered  #(mouse-event-handler @root :mouse-entered)
+         :mouse-exited   #(mouse-event-handler @root :mouse-exited)
+         :mouse-pressed  #(mouse-event-handler @root :mouse-pressed)
+         :mouse-released #(mouse-event-handler @root :mouse-released)
+         :mouse-clicked  #(mouse-event-handler @root :mouse-clicked)
+         :mouse-moved    #(mouse-event-handler @root :mouse-moved)
+         :mouse-dragged  #(mouse-event-handler @root :mouse-dragged)
+         :mouse-wheel    #(mouse-wheel-event-handler @root %1)))

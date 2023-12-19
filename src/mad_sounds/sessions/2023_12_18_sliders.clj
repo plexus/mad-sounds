@@ -31,6 +31,6 @@
   :settings #(q/smooth 2) ;; Turn on anti-aliasing
   :features [:resizable :keep-on-top]
   :middleware [p/middleware]
-  :ui/root app
-  :ui/defaults defaults
+  ::p/root #'app
+  ::p/defaults defaults
   :size [323 200])
