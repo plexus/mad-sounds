@@ -20,6 +20,13 @@
    (fn [k]
      (resolve (symbol "quil.core" (name k))))))
 
+(def quil-getter
+  (memoize
+   (fn [k]
+     (or
+      (resolve (symbol "quil.core" (str "current-" (name k))))
+      (throw (Exception. (str "no such getter" k)))))))
+
 (defn prop
   ([k]
    (get *drawing-stack* k))
@@ -55,6 +62,12 @@
   (doseq [[[x1 y1] [x2 y2]]
           (partition 2 1 (cons (last points) points))]
     (q/line x1 y1 x2 y2)))
+
+(defn border-rect [x y w h]
+  (q/rect (+ x (prop :stroke-weight))
+          (+ y (prop :stroke-weight))
+          (- w (prop :stroke-weight) (prop :stroke-weight))
+          (- h (prop :stroke-weight) (prop :stroke-weight))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -111,14 +124,19 @@
       (apply f cval args))))
 
 (defn draw [c x y w h]
+  ;;(print ".") (flush) ;; see if we're not calling draw too often
   (alter-meta! c assoc :parent *drawing-component*)
   (let [root (find-root c)]
     (when (and (:focusable? (meta c))
                (not (:focused (meta root))))
       (alter-meta! root assoc :focused c)))
-  (binding [*drawing-component* c]
-    (delegate c -draw x y w h))
-  (swap! c assoc :bounds [x y w h])
+  (let [[x y w h] (if-let [m (:margin @c)]
+                    [(+ x m) (+ y m) (- w m m) (- h m m)]
+                    [x y w h])]
+    (binding [*drawing-component* c]
+      (delegate c -draw x y w h))
+    (swap! c assoc :bounds [x y w h]))
+  (swap! c assoc :outer-bounds [x y w h])
   (add-watch c ::rerender (fn [k r o n] (on-model-changed c o n))))
 
 (defn min-size [c] (delegate c -min-size))
@@ -164,33 +182,34 @@
           [w h] (size-f child)]
       [(+ sw w) (+ sw h)])))
 
-(defn container-draw [{:keys [children layout-f]} x y w h]
-  (doseq [[child x y w h] (layout-f children x y w h)]
+(defn container-draw [{:keys [children layout-f] :as this} x y w h]
+  (doseq [[child x y w h] (layout-f this x y w h)]
     (draw child x y w h)))
 
-(defn layout-rows [children x y w h]
+(defn layout-rows [{:keys [children]} x y w h]
   (let [rh (/ h (count children))]
     (for [[idx child] (map vector (range) children)]
       [child x (+ y (* idx rh)) w rh])))
 
-(defn layout-cols [children x y w h]
+(defn layout-cols [{:keys [children]} x y w h]
   (let [cw (/ w (count children))]
     (for [[idx child] (map vector (range) children)]
       [child (+ x (* idx cw)) y cw h])))
 
-(defn layout-stack [children x y w h]
+(defn layout-stack [{:keys [children gap]
+                     :or {gap 0}} x y w h]
   (second
    (reduce (fn [[yy res] ch]
              (let [[pw ph] (pref-size ch)]
                (if (<= (+ yy ph) h)
-                 [(+ yy ph)
+                 [(+ yy ph gap)
                   (conj res [ch x yy (min pw w) ph])]
                  (reduced [nil res]))))
            [y []] children)))
 
-(defn container-size [{:keys [children layout-f bounds]}]
+(defn container-size [{:keys [children layout-f bounds] :as this}]
   (if-let [[x y w h] bounds]
-    (let [layout (layout-f children x y w h)
+    (let [layout (layout-f this x y w h)
           x (apply min (map (fn [_ x _ _ _] x) layout))
           y (apply min (map (fn [_ _ y _ _] y) layout))]
       [(- (apply max (map (fn [_ x _ w _] (+ x w)) layout)) x)
@@ -208,10 +227,10 @@
   (let [{:keys [child children]} @parent
         {:keys [x y type]} e]
     (doseq [c (if child [child] children)
+            :when (:bounds @c)
             :let [[cx cy cw ch] (:bounds @c)]]
       (when (and (<= cx x (+ cx cw))
                  (<= cy y (+ cy ch)))
-        (prn (meta c) e)
         (dispatch-mouse-event c e)))))
 
 ;;;;;;;;;;;;;;;
@@ -243,14 +262,15 @@
    :-max-size    #'container-size
    :-mouse-event #'forward-mouse-event})
 
-(defn container [children layout-f]
-  (atom {:children children
-         :layout-f layout-f}
+(defn container [children layout-f props]
+  (atom (merge {:children children
+                :layout-f layout-f}
+               props)
         :meta container-meta))
 
-(defn rows [children] (container children layout-rows))
-(defn cols [children] (container children layout-cols))
-(defn stack [children] (container children layout-stack))
+(defn rows [children & {:as props}] (container children layout-rows props))
+(defn cols [children & {:as props}] (container children layout-cols props))
+(defn stack [children & {:as props}] (container children layout-stack props))
 
 (defn select-list-draw [{:keys [children index]} x y w h]
   (doseq [[idx [child x y w h]] (map list
@@ -288,15 +308,17 @@
          :index      0}
         :meta select-list-meta))
 
-(defn hslider-draw [{:keys [min max step value
-                            height color bg-color]} x y w h]
-  (with-props {:stroke-weight 1}
-    (with-props {:fill bg-color}
-      (q/rect x y w h))
-    (with-props {:fill color}
-      (q/rect x y (/ (* w value) (- max min)) h)))
-  (with-props {:text-align :center}
-    (q/text (str value)
+(defn hslider-draw [{:keys [min max step value height bar bar-margin background text format]} x y w h]
+  (with-props background
+    (border-rect x y w h))
+  (with-props bar
+    (let [m (+ (:stroke-weight background 0) bar-margin)]
+      (border-rect (+ x m)
+                   (+ y m)
+                   (- (/ (* w value) (- max min)) (* 2 m))
+                   (- h (* 2 m)))))
+  (with-props text
+    (q/text (format value)
             (+ x (/ w 2))
             (+ y (/ h 2) (/ (prop :text-size) 3)))))
 
@@ -315,26 +337,31 @@
   {:-draw          #'hslider-draw
    :-pref-size     #'hslider-size
    :-mouse-pressed #'hslider-mouse-pressed
-   :-mouse-dragged #'hslider-mouse-pressed
-   })
+   :-mouse-dragged #'hslider-mouse-pressed})
 
-(defn hslider [{:keys [min max step value
-                       height color]}]
-  (atom
-   {:min (or min 0)
-    :max max
-    :step step
-    :value (or value min 0)
-    :height (or height 30)
-    :color (or color [73 175 157])}
-   :meta
-   hslider-meta))
+(def hslider-defaults
+  {:min        0
+   :format     str
+   :height     30
+   :bar-margin 4
+   :bar        {:fill [73 175 157]
+                :stroke-weight 0}
+   :background {:fill          150
+                :stroke        0
+                :stroke-weight 4}
+   :text       {:text-align :center}})
+
+(defn hslider [{:keys [min value] :as flags}]
+  (atom (assoc (merge hslider-defaults flags)
+               :value (or min value 0))
+        :meta
+        hslider-meta))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn draw-root [c]
   (when (or (:dirty? (meta c))
-            (not= [0 0 (q/width) (q/height)] (:bounds @c)))
+            (not= [0 0 (q/width) (q/height)] (:outer-bounds @c)))
     (alter-meta! c assoc :dirty? false)
     (set-prop! :background (prop :background))
     (draw c 0 0 (q/width) (q/height))))
@@ -359,6 +386,7 @@
     :wheel-rotation i}))
 
 (defn middleware [{::keys [root defaults] :as options}]
+  (mark-dirty! @root)
   (assoc options
          :setup          #(init-props! defaults)
          :draw           #(with-props defaults (draw-root @root))
