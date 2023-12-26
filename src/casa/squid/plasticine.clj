@@ -351,11 +351,35 @@
                 :stroke-weight 4}
    :text       {:text-align :center}})
 
-(defn hslider [{:keys [min value] :as flags}]
-  (atom (assoc (merge hslider-defaults flags)
-               :value (or min value 0))
-        :meta
-        hslider-meta))
+(defn bind> [src src-path dest dest-path]
+  (add-watch src [:bind> src-path dest dest-path]
+             (fn [k r o n]
+               (let [new-val (get-in n src-path)]
+                 (when (not= new-val (get-in o src-path))
+                   (if (seq dest-path)
+                     (swap! dest assoc-in dest-path new-val)
+                     (reset! dest new-val)))))))
+
+(defn bind<> [src src-path dest dest-path]
+  (bind> src src-path dest dest-path)
+  (bind> dest dest-path src src-path))
+
+(defn unbind [src src-path dest dest-path]
+  (remove-watch [:bind> src src-path dest dest-path])
+  (remove-watch [:bind> dest dest-path src src-path]))
+
+(defn hslider [{:keys [min value model on-change] :as flags}]
+  (let [value (or (when model @model) min value 0)
+        slider (atom (assoc (merge hslider-defaults flags)
+                            :value value
+                            :min (or min 0))
+                     :meta
+                     hslider-meta)]
+    (when model
+      (bind<> slider [:value] model []))
+    (when on-change
+      (add-watch slider :on-change (fn [k r o n] (when (not= (:value o) (:value n)) (on-change (:value n))))))
+    slider))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
