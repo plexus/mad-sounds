@@ -72,12 +72,33 @@
     (draw-out-ports this x y w h)
     (draw-connections this x y w h))
 
+  (defn patchbay-mouse-clicked [this e]
+    (let [{:keys [offset-x offset-y spacing bounds]} @this
+          [x y w h] bounds
+          mx (:x e)
+          my (:y e)
+          conn? (set (jack/connections))]
+      (doseq [[out-port out-idx] (map list (jack/ports @jack/default-client #{:audio :out}) (range))
+              [in-port in-idx] (map list (jack/ports @jack/default-client #{:audio :in}) (next (range)))
+              :let [xx (+ x offset-x (* in-idx spacing) (- (* 5/4 spacing)))
+                    yy (+ y offset-y (* out-idx spacing) (* 3/4 spacing))
+                    conn? (conn? [out-port in-port])]]
+        (when (and (< (- xx (* 1/2 spacing)) mx (+ xx (* 1/2 spacing)))
+                   (< (- yy (* 1/2 spacing)) my (+ yy (* 1/2 spacing))))
+          (try
+            (if (some #{[out-port in-port]} (jack/connections))
+              (jack/disconnect out-port in-port)
+              (jack/connect out-port in-port))
+            (catch Exception e))
+          (p/mark-dirty! this)))))
+
   (def app (atom
             {:offset-x 500
              :offset-y 400
              :spacing 35
              :props {:stroke-weight 1}}
-            :meta {:-draw #'draw-patchbay})  ))
+            :meta {:-draw #'draw-patchbay
+                   :-mouse-clicked #'patchbay-mouse-clicked})  ))
 
 (q/defsketch controllers
   :title       ""
