@@ -8,6 +8,8 @@
    [quil.core :as q]
    [vibeflow.util :as util]))
 
+(jack/connect (util/overtone-conns))
+
 (definst bell1 [note {:default 60 :min 0 :max 120 :step 1}
                 mod-interval {:default 12 :min -12 :max 24 :step 1}
                 attack {:default 0.001 :min 0 :max 1 :step 0.01}
@@ -56,7 +58,10 @@
                 :model value
                 :on-change #(ctl bell1 name %)
                 :height 60
+                :bar
                 :format #(str name ": " %)})))
+
+(swap! app assoc :children into sliders)
 
 (def app
   (p/stack sliders :margin 4 :gap 4))
