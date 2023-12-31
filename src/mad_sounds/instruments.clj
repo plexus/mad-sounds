@@ -1,6 +1,6 @@
 (ns mad-sounds.instruments
-  (:require [overtone.studio.scope :refer :all])
-  (:require [mad-sounds.launchpad-mini :refer :all])
+  ;; (:require [overtone.studio.scope :refer :all])
+  ;; (:require [mad-sounds.launchpad-mini :refer :all])
   (:require [overtone.live :refer :all]))
 
 (def kick-s (freesound 777))

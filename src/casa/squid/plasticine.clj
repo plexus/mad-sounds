@@ -1,7 +1,7 @@
 (ns casa.squid.plasticine
   "Moldable clay UI lib for Quil"
   (:require
-   [clojure.java.io :as io]
+   [quil.applet :as ap]
    [quil.core :as q]))
 
 ;; - A component is an atom with metadata
@@ -102,6 +102,9 @@
 (defdispatch -min-size [this] [0 0])
 (defdispatch -max-size [this] [Long/MAX_VALUE Long/MAX_VALUE])
 (defdispatch -pref-size [this] [100 100])
+(defdispatch -cleanup [this]
+  (doseq [c (if-let [c (:child @this)] [c] (:children @this))]
+    (-cleanup c)))
 
 (defdispatch -key-pressed [this]
   (let [keymap (:key-pressed-map (meta this))]
@@ -315,7 +318,7 @@
     (let [m (+ (:stroke-weight background 0) bar-margin)]
       (border-rect (+ x m)
                    (+ y m)
-                   (- (/ (* w value) (- max min)) (* 2 m))
+                   (/ (* (- w (* 2 m)) value) (- max min))
                    (- h (* 2 m)))))
   (with-props text
     (q/text (format value)
@@ -333,11 +336,17 @@
                     (* (- max min)
                        (/ (- x cx) cw)))))))
 
+(declare unbind)
+
+(defn hslider-cleanup [this]
+  (unbind this [:value] (:model @this) []))
+
 (def hslider-meta
   {:-draw          #'hslider-draw
    :-pref-size     #'hslider-size
    :-mouse-pressed #'hslider-mouse-pressed
-   :-mouse-dragged #'hslider-mouse-pressed})
+   :-mouse-dragged #'hslider-mouse-pressed
+   :-cleanup       #'hslider-cleanup})
 
 (def hslider-defaults
   {:min        0
@@ -351,14 +360,19 @@
                 :stroke-weight 4}
    :text       {:text-align :center}})
 
+(def ^:dynamic *bind-set* #{})
+
 (defn bind> [src src-path dest dest-path]
-  (add-watch src [:bind> src-path dest dest-path]
-             (fn [k r o n]
-               (let [new-val (get-in n src-path)]
-                 (when (not= new-val (get-in o src-path))
-                   (if (seq dest-path)
-                     (swap! dest assoc-in dest-path new-val)
-                     (reset! dest new-val)))))))
+  (let [dest-vec [dest dest-path]]
+    (add-watch src [:bind> src-path dest dest-path]
+               (fn [k r o n]
+                 (when-not (contains? *bind-set* dest-vec)
+                   (let [new-val (get-in n src-path)]
+                     (when (not= new-val (get-in o src-path))
+                       (binding [*bind-set* (conj *bind-set* dest-vec)]
+                         (if (seq dest-path)
+                           (swap! dest assoc-in dest-path new-val)
+                           (reset! dest new-val))))))))))
 
 (defn bind<> [src src-path dest dest-path]
   (bind> src src-path dest dest-path)
@@ -384,11 +398,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn draw-root [c]
-  (when (or (:dirty? (meta c))
-            (not= [0 0 (q/width) (q/height)] (:outer-bounds @c)))
-    (alter-meta! c assoc :dirty? false)
-    (set-prop! :background (prop :background))
-    (draw c 0 0 (q/width) (q/height))))
+  (binding [*root* c]
+    (when (or (:dirty? (meta c))
+              (not= [0 0 (q/width) (q/height)] (:outer-bounds @c)))
+      (alter-meta! c assoc :dirty? false)
+      (set-prop! :background (prop :background))
+      (draw c 0 0 (q/width) (q/height)))))
 
 (defn mouse-event-handler [c t]
   (dispatch-mouse-event
@@ -414,7 +429,12 @@
   (assoc options
          :setup          #(init-props! defaults)
          :draw           #(with-props defaults (draw-root @root))
-         :key-pressed    #(-key-pressed (:focused (meta @root)))
+         :on-close       #(-cleanup @root)
+         :key-pressed    (fn []
+                           (-key-pressed (:focused (meta @root)))
+                           ;; prevent close-on-esc
+                           (when (= (char 27) (.-key (ap/current-applet)))
+                             (set! (.-key (ap/current-applet)) (char 0))))
          :key-released   #(-key-released (:focused (meta @root)))
          :key-typed      #(-key-typed (:focused (meta @root)))
          :key-typed      #(-key-typed (:focused (meta @root)))

@@ -2,10 +2,10 @@
   (:require
    [casa.squid.jack :as jack]
    [casa.squid.plasticine :as p]
+   [quil.core :as q]
    [overtone.at-at :as at]
    [overtone.live :refer :all]
    [overtone.studio.midi :as midi]
-   [quil.core :as q]
    [vibeflow.util :as util]))
 
 (jack/connect (util/overtone-conns))
