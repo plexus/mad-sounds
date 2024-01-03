@@ -32,6 +32,26 @@
                      (swap! voices dissoc note)))
                  [synth-key :off]))))
 
+(defn midi-preview-off [synth-key]
+  (o/remove-event-handler [synth-key :on])
+  (o/remove-event-handler [synth-key :off]))
+
+(defn pad->note [p]
+  (cond
+    (< 0 p 5) (+ p 39)
+    (< 4 p 9) (+ p 43)
+    (< 8 p 13) (+ p 27)
+    (< 12 p 17) (+ p 31)))
+
+(defn midi-pad
+  ([ch pad synth-key synth]
+   (o/on-event [:midi :note-on]
+               (fn [{:keys [note channel]}]
+                 (when (and (= note (pad->note pad))
+                            (or (nil? ch) (= ch channel)))
+                   (synth)))
+               [synth-key :pad])))
+
 (defn midi-ctl
   ([synth-key synth]
    (let [params (:params (if (var? synth) @synth synth))]

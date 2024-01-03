@@ -9,7 +9,7 @@
 
 (defn sliders-for [synth]
   (for [{:keys [name min max value step]}
-        (:params (if (var? synth) @synth synth))
+        (:params synth)
         :when (not (exclude? name))]
     (p/hslider {:min min
                 :max max
@@ -25,7 +25,8 @@
   (p/stack [] :margin 4 :gap 4))
 
 (defn ctl-synth! [synth]
-  (swap! app assoc :children (sliders-for synth)))
+  (let [synth (if (var? synth) @synth synth)]
+    (swap! app assoc :children (sliders-for synth))))
 
 (defn show! []
   (q/defsketch controllers

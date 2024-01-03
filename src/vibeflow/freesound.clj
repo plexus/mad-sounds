@@ -38,13 +38,17 @@
    :ring-hat      12912
    :zg-hat        72526})
 
-(def samples (atom {}))
+(defonce samples (atom {}))
+
+(def fbuf* (memoize freesound))
+
+(defn fbuf [k] (fbuf* (get sample-ids k)))
 
 (defmacro fsample [sname]
   (let [sid (get sample-ids sname)]
     `(or (get @samples ~sid)
          (let [{n-ch# :n-channels
-                id# :id} (freesound ~sid)
+                id# :id} (fbuf* ~sid)
                inst# (inst ~(name sname) [~'amp 1]
                            (~'* ~'amp
                             (scaled-play-buf n-ch# id# :action FREE)
@@ -54,12 +58,12 @@
 
 (run! freesound (vals sample-ids))
 
-((fsample :kick))
-((fsample :kick-d))
-((fsample :kick-fat))
-((fsample :kick-thin))
-((fsample :kick-prog))
-((fsample :kicky))
-:kick-d
-:kick-fat
-:kick-thin
+;; ((fsample :kick))
+;; ((fsample :kick-d))
+;; ((fsample :kick-fat))
+;; ((fsample :kick-thin))
+;; ((fsample :kick-prog))
+;; ((fsample :kicky))
+;; :kick-d
+;; :kick-fat
+;; :kick-thin
