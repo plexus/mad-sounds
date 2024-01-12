@@ -44,32 +44,36 @@
         (* 3 freq)#_(line (* 3 freq) (* 5 freq)  )))))
 
 
-(demo
-  6
+(definst bell []
   (let [freq (midicps 65)
         decaytime 6
         burst (var-saw freq)
         filter-coef 0.3
         filter-coef2 0.4]
-    (pan2
-     (rlpf
-      :in (+
-           (pluck burst
-                  :delaytime (/ 1 freq)
-                  :decaytime decaytime
-                  :coef filter-coef)
-           (* (line:kr 0.1 0.3 4)
-              (pluck burst
-                     :delaytime (/ 1 (* 1.01 freq))
-                     :decaytime decaytime
-                     :coef filter-coef2))
-           (* 0.3
-              (pluck burst
-                     :delaytime (/ 1 (* 2.15 freq))
-                     :decaytime decaytime
-                     :coef filter-coef2)))
-      :freq (line (* 5 freq) (* 1.3 freq) 1.5)))))
+    (rlpf
+     :in (+
+          (pluck burst
+                 :delaytime (/ 1 freq)
+                 :decaytime decaytime
+                 :coef filter-coef)
+          (* (line:kr 0.1 0.3 4)
+             (pluck burst
+                    :delaytime (/ 1 (* 1.01 freq))
+                    :decaytime decaytime
+                    :coef filter-coef2))
+          (* 0.3
+             (pluck burst
+                    :delaytime (/ 1 (* 2.15 freq))
+                    :decaytime decaytime
+                    :coef filter-coef2)))
+     :freq (line (* 5 freq) (* 1.3 freq) 1.5))))
 
+(util/defloop churchbell 1 [m b]
+  (at (m b) (bell)))
+
+(churchbell (metronome 30))
+(defn churchbell [ _])
+(stop)
 (stop)
 (util/midi-preview :bell #'bell)
 (util/midi-preview-off :keys)
