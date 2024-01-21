@@ -1,0 +1,24 @@
+- wrap
+  - after specific component
+  - autowrap rows
+- span
+  - n wide/high
+  - dx/dy size
+- split n
+- gaps
+  - grid row/col gaps
+  - component gaps
+    - between components in split cells
+  - pushing?
+- absolute x/y
+- size (min:preferred:max)
+  - width/height only
+  - on row/col : min/pref/max
+- align
+- grow/shrink
+
+Constraints
+- layout (grid)
+- row / column
+  - gap
+- component
