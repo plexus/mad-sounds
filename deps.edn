@@ -5,6 +5,7 @@
   #_#_launchpad/launchpad        {:mvn/version "0.1.0-SNAPSHOT"}
   org.clojure/core.match         {:mvn/version "1.0.1"}
   casa.squid/jack                {:local/root "/home/arne/Overtone/jack"}
+  casa.squid/plasticine          {:local/root "/home/arne/Overtone/plasticine"}
   casa.squid/sequencer           {:local/root "/home/arne/Overtone/sequencer"}
   ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
   lambdaisland/data-printers     {:mvn/version "0.7.47"}

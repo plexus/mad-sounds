@@ -118,12 +118,26 @@
   (long (* m (Math/ceil (/ i m)))))
 
 (defmacro defloop [lname beats [metro-sym beat-sym] & body]
-  `(defn ~lname
-     ([metro#]
-      (~lname metro# (round-to-multiple-down (metro#) ~beats)))
-     ([metro# beat#]
-      (let [~metro-sym metro#
-            ~beat-sym beat#
-            next-beat# (+ beat# ~beats)]
-        ~@body
-        (o/apply-by (metro# next-beat#) (var ~lname) [metro# next-beat#])))))
+  `(def
+     ;; jumping through some hoops here to make sure both the var and the fn can
+     ;; be passed to `kill`
+     ~(with-meta lname
+        `{'overtone.sc.protocols/kill*
+          (fn [v#]
+            (alter-meta! v# assoc :killed true))})
+     ~(with-meta
+        `(fn
+           ([metro#]
+            (~lname metro# (round-to-multiple-down (metro#) ~beats)))
+           ([metro# beat#]
+            (if (:killed (meta (var ~lname)))
+              (alter-meta! (var ~lname) dissoc :killed)
+              (let [~metro-sym metro#
+                    ~beat-sym beat#
+                    next-beat# (+ beat# ~beats)]
+                ~@body
+                (o/apply-by (metro# next-beat#) (var ~lname) [metro# next-beat#])))))
+        `{'overtone.sc.protocols/kill*
+          (fn [v#]
+            (alter-meta! (var ~lname) assoc :killed true))})
+     ))
