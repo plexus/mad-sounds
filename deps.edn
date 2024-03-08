@@ -3,17 +3,17 @@
  {org.clojure/clojure            {:mvn/version "1.11.1"}
   overtone/overtone              {:local/root "/home/arne/github/overtone"} #_ {:mvn/version "0.10.6"}
   #_#_launchpad/launchpad        {:mvn/version "0.1.0-SNAPSHOT"}
-  org.clojure/core.match         {:mvn/version "1.0.1"}
+  org.clojure/core.match         {:mvn/version "1.1.0"}
   casa.squid/jack                {:local/root "/home/arne/Overtone/jack"}
   casa.squid/plasticine          {:local/root "/home/arne/Overtone/plasticine"}
   casa.squid/sequencer           {:local/root "/home/arne/Overtone/sequencer"}
-  ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
+  ch.qos.logback/logback-classic {:mvn/version "1.5.3"}
   lambdaisland/data-printers     {:mvn/version "0.7.47"}
   ;; overtone/overtone-gui {:local/root "/home/arne/Overtone/overtone-gui"}
 
-  org.clojure/data.xml {:mvn/version "0.2.0-alpha8"}
+  org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
   enlive/enlive        {:mvn/version "1.1.6"}
-  quil/quil            {:mvn/version "4.3.1323"}
+  quil/quil            {:mvn/version "4.3.1563"}
 
   org.jflac/jflac-codec                    {:mvn/version "1.5.2"}
   org.freedesktop.gstreamer/gst1-java-core {:mvn/version "1.4.0"}
