@@ -5,7 +5,7 @@
 
 (spectro)
 
-(synthdef-read "target/sinosc2.scsyndef")
+(synthdef-read "./target/tick.scsyndef"#_"./target/test.scsyndef" #_"target/sinosc2.scsyndef")
 
 (demo (pan2 (mix (* (sin-osc (for [i (range 10)]
                                (* (inc i) 300)))
