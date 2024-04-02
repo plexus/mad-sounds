@@ -16,10 +16,10 @@
           (- max min))))
 
 (defn srand
-  "Signed/symmetric rand, returns a value between -n and n."
+  "Signed/symmetric rand, returns a value between -n and n. Integer if n is
+  integer."
   [n]
   (rrand (- n) n))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; patterns
@@ -173,15 +173,7 @@
   value."
   {:freq :detuned-freq})
 
-(def playing (volatile! {}))
-
-(defn invoke-inst [i freq gated? & args]
-  (let [h (apply i args)]
-    (prn :on i freq h)
-    (when gated?
-      (vswap! playing assoc-in [i freq] h))))
-
-(defn handle-note-on [e]
+(defn handle-note [e]
   (let [i (:instrument e)
         params (:params i)
         args (reduce (fn [acc {:keys [name]}]
@@ -192,35 +184,26 @@
                            acc)))
                      []
                      params)
-        h (apply i args)]
-    (if-let [t (:time e)]
-      (apply-by t invoke-inst i (kval e :freq)
-                (some #{"gate"} (map :name params))
-                args)
-      (apply invoke-inst i (kval e :freq)
-             (some #{"gate"} (map :name params))
-             args))))
+        has-gate? (some #{"gate"} (map :name params))]
+    (if-let [t (:start-time e)]
+      (at t
+        (let [h (apply i args)]
+          (prn h)
+          (when (and (:end-time e) has-gate?)
+            (at (:end-time e) (ctl h :gate 0))))
+        args))))
 
-(defn close-gate [h i freq]
-  (prn :close h)
-  (try
-    (ctl h :gate 0)
-    (vswap! playing update i dissoc freq)
-    (catch Exception e
-      (println "gate closed failed" freq)))
-  )
+(defn handle-chord [{:keys [chord inversion] :as e
+                     :or {inversion 0}}]
+  (doseq [n (-> chord
+                resolve-chord
+                (invert-chord inversion))]
+    (event :note (assoc e
+                        :type :note
+                        :midinote (+ (kval e :midinote) n)))))
 
-(defn handle-note-off [e]
-  (let [i (:instrument e)
-        t (:time e)
-        freq (kval e :freq)]
-    (when-let [h (get-in @playing [i freq])]
-      (if t
-        (apply-by t close-gate [h i freq])
-        (close-gate h i freq)))))
-
-(on-event :note-on #'handle-note-on ::note-on)
-(on-event :note-off #'handle-note-off ::note-off)
+(on-event :note #'handle-note ::note)
+(on-event :chord #'handle-chord ::chord)
 
 (def pplayers (volatile! {}))
 
@@ -233,17 +216,16 @@
                   next-seq (next pseq)
                   on-t     (clock beat)
                   off-t    (clock (+ beat dur))]
-              (prn (:type e))
               (when (and player (not paused?))
-                (if (= :note (:type e))
-                  (do
-                    (apply-by on-t event :note-on [(assoc e :time on-t)])
-                    (apply-by off-t event :note-off [(assoc e :time off-t)]))
-                  (apply-by event (:type e) [(assoc e :time on-t)])))
+                (apply-by on-t event (:type e) [(assoc e
+                                                       :start-time on-t
+                                                       :end-time off-t)]))
               (if next-seq
                 (do
                   (apply-by off-t schedule-next [k])
-                  (assoc-in pp [k :pseq] next-seq))
+                  (update pp k assoc
+                          :pseq next-seq
+                          :beat (+ beat dur)))
                 (dissoc pp k))))))
 
 (defn pplay [k clock pattern & {:as opts}]
@@ -256,57 +238,33 @@
                                   opts))
   (schedule-next k))
 
-(event :note-off :instrument mucklewain)
-(stop)
-(pplay :x (metronome 90)
-       (pbind {:dur [0.5 1 0.5]
-               :degree [1 2 3]})
-       {:proto {:instrument mucklewain}})
-(mucklewain)
-(schedule-next :x)
-@pplayers
-@playing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defcgen basic-splay
-  [in-array    {:default [] :doc "List of input channels to splay."}
-   spread      {:default 1 :doc "The audio spread width."}
-   center      {:default 0 :doc "Center point of audio spread."}]
-  (:ar (let [n (count in-array)]
-         (mix (pan2 in-array
-                    (for [i (range n)]
-                      (+ center
-                         (* spread
-                            (- (* i
-                                  (/ 2 (dec n)))
-                               1)))))))))
-
-(defcgen offsetify [freq {} n {} spread {}]
-  (:ar
-   (repeatedly n #(* freq (+ 1 (midiratio (srand spread)))))))
-
-(definst mucklewain [freq 440 gate 1]
-  (basic-splay
-   (* (env-gen (adsr) :gate gate :action FREE)
-      (rlpf (square (offsetify freq 4 0.1))
-            (* 5 freq)
-            0.1))
-   (env-gen (envelope [1 0 1] [0.05 0.05]))))
-
-(definst gloria [freq 265
-                 gate 1.0
-                 amp 0.5]
-  (* (env-gen (adsr) :gate gate :action FREE)
-     amp
-     (+ (* 1.5 (sin-osc freq))
-        (pluck (square) :delaytime (/ 1 (offsetify freq 9 0.6))))))
 
 
-(gloria)
+;; (gloria)
 
-(doseq [e (take 50 (pbind {:instrument gloria
-                           :degree (cons 0 (repeatedly 3 #(rrand 0 7)))
-                           :scale :hindu
-                           :dur (mapcat identity (repeatedly #(shuffle [100 200 300 400])))}))]
-  (event :note-on e)
-  (Thread/sleep (:dur e)))
+;; (doseq [e (take 50 (pbind {:instrument gloria
+;;                            :degree (cons 0 (repeatedly 3 #(rrand 0 7)))
+;;                            :scale :hindu
+;;                            :dur (mapcat identity (repeatedly #(shuffle [100 200 300 400])))}))]
+;;   (event :note-on e)
+;;   (Thread/sleep (:dur e)))
+
+SCALE
+(event-debug-off)
+(reset! overtone.sc.machinery.server.comms/osc-debug* false)
+
+(pplay :x (metronome 90)
+
+       (pbind {:type :chord
+               :instrument mucklewain
+               :dur (repeat 10 2.0)
+               :root -20
+               :degree [5 1 1
+                        2 3 6
+                        4 1]
+               :chord [:major :major :major
+                       :minor :minor :minor
+                       :7 :major]})
+       )
