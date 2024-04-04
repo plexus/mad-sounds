@@ -24,7 +24,7 @@
         car (sin-osc :freq (+ freq (* mod depth)))
         env (env-gen (perc 0.2 0.5 0.7 :linear) :action FREE)]
     (* car env)))
-
+(fm)
 (def pool (at/mk-pool))
 
 (at/every 1000 #(fm) pool)
