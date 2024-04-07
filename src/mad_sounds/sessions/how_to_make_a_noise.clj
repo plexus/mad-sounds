@@ -107,3 +107,80 @@
 (demo (lf-noise0))
 (demo (lfd-noise0))
 (demo (hasher (sin-osc)))
+
+;;; Combining Sounds
+
+;; Doubling oscillators
+
+(demo (+ (var-saw 300 :width 0)
+         (var-saw 300 :width 0 :iphase 0.15)))
+
+;; more cancellation = thinner/tinnier sound
+(demo (+ (var-saw 300 :width 0)
+         (var-saw 300 :width 0 :iphase 0.45)))
+
+;; two saws at half phase is saw of 2x frequency
+(demo (+ (var-saw 300 :width 0)
+         (var-saw 300 :width 0 :iphase 0.5)))
+
+
+;; Oscillator detuning
+
+(demo
+  10
+  (let [oscillators 6
+        detune (mouse-x :min 0.00001 :max 0.3)
+        freq 300]
+    (mix
+     (for [i (range oscillators)]
+       (var-saw (* freq (+ 1 (* detune (- i (/ oscillators 2)))))
+                :width 0
+                :iphase (rrand 0 1)))))
+  )
+
+
+;; Layering oscillators
+
+(demo ;; saw + square
+  (moog-ff
+   (+ (* 0.5 (var-saw :width 0))
+      (square))
+   5000))
+
+
+(demo ;; two squares, octave apart
+  (* (env-gen (perc))
+     (moog-ff
+      (+ (square 150)
+         (* 0.75 (square 300 #_(lin-lin (sin-osc 75) 0 1 299 301))) ;; some detuning?
+         #_(* 0.5 (square 600))) ;; add a third?
+      5000)))
+
+
+(demo ;; saw + square, drop square an octave
+  (+ (var-saw 300 :width 0)
+     (square 150)))
+
+;; Hard synching oscillators
+
+;; seems this is actually not that easy with SC/Overtone, there's sync-saw which
+;; is the main built in option
+
+;; https://scsynth.org/t/advanced-synthesis-oscillator-sync/239/7
+
+(demo 10 (sync-saw 100 (mouse-x 200 299)))
+
+;; In practice
+;; Some more listening exercises
+
+;; Different mixes of saw + square
+(demo 5
+      (+ (* (mouse-x) (saw 300))
+         (* (mouse-x 1 0) (square 300))))
+
+
+;; different intervals
+(demo 5
+      (let [semtones (round (mouse-x 0 12) 1)]
+        (+ (* (mouse-y) (saw (* 300 (midiratio semtones))))
+           (* (mouse-y 1 0) (square 300)))))
