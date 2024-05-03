@@ -25,4 +25,4 @@ definst
 
 [
  (synthdef-read "target/sinosc3.scsyndef")
- (synthdef-read  (synthdef-bytes (:sdef mysin)))]
+ (synthdef-read (synthdef-bytes (:sdef mysin)))]
