@@ -184,3 +184,46 @@
       (let [semtones (round (mouse-x 0 12) 1)]
         (+ (* (mouse-y) (saw (* 300 (midiratio semtones))))
            (* (mouse-y 1 0) (square 300)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Chapter 8
+
+;; basic bass
+
+(definst bass [freq 70
+               brightness 1.1
+               attack 0.1
+               decay 0.1
+               sustain 0.7
+               release 0.1
+               amp 0.5
+               gate 1
+               lag 0.2]
+  (let [freq (lag:kr freq lag)
+        env  (env-gen (adsr attack decay sustain release)
+                      :gate gate)]
+    (-> (var-saw freq :width 0)
+        (rlpf (* brightness freq env))
+        (* amp env))))
+
+(pplay
+ ::bass
+ (pbind {;;:type ^{:dur [1/2 7/2]} [:note :ctl]
+         :degree [:i :i :iii :ii :i :iv :v]
+         :dur    [1/2 1 1/2 1/2 1/2 1/2 1/2]
+         :root   ^{:dur 8} [:c3 :d3 :b2 :c3]
+         }
+        ##Inf)
+ {:proto {:instrument #'bass
+          :attack     0.01
+          :octave     3
+          :lag        2
+          :amp        0.5
+          :brightness 1.1}})
+
+(ppause ::bass)
+
+(bass :lag 1 :amp 0.5)
+(ctl bass :freq 100)
+(stop)
+(lag-ud)

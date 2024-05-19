@@ -27,7 +27,6 @@ add-watch
 
 (midi-connected-devices)
 
-
 (definst example [freq 265 gate 1 amp 1]
   (* (env-gen (adsr) :gate gate :action FREE)
      amp
