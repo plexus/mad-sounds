@@ -192,13 +192,13 @@
 
 (definst bass [freq 70
                brightness 1.1
-               attack 0.1
+               attack 0.01
                decay 0.1
                sustain 0.7
                release 0.1
                amp 0.5
                gate 1
-               lag 0.2]
+               lag 0.1]
   (let [freq (lag:kr freq lag)
         env  (env-gen (adsr attack decay sustain release)
                       :gate gate)]
@@ -208,18 +208,13 @@
 
 (pplay
  ::bass
- (pbind {;;:type ^{:dur [1/2 7/2]} [:note :ctl]
-         :degree [:i :i :iii :ii :i :iv :v]
+ (pbind {:degree [:i :i :iii :ii :i :iv :v]
          :dur    [1/2 1 1/2 1/2 1/2 1/2 1/2]
-         :root   ^{:dur 8} [:c3 :d3 :b2 :c3]
-         }
+         :root   ^{:dur 8} [:c3 :d3 :b2 :c3]}
         ##Inf)
  {:proto {:instrument #'bass
           :attack     0.01
-          :octave     3
-          :lag        2
-          :amp        0.5
-          :brightness 1.1}})
+          :octave     3}})
 
 (ppause ::bass)
 
