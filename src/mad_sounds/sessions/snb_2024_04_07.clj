@@ -9,6 +9,9 @@
          (square freq))
       (* 30 freq))))
 
+(rusty)
+(brock)
+
 (pplay
  :rusty
  (pbind
