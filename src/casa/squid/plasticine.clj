@@ -379,8 +379,8 @@
   (bind> dest dest-path src src-path))
 
 (defn unbind [src src-path dest dest-path]
-  (remove-watch [:bind> src src-path dest dest-path])
-  (remove-watch [:bind> dest dest-path src src-path]))
+  (remove-watch src [:bind> src src-path dest dest-path])
+  (remove-watch dest [:bind> dest dest-path src src-path]))
 
 (defn hslider [{:keys [min value model on-change] :as flags}]
   (let [value (or (when model @model) min value 0)

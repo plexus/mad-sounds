@@ -180,13 +180,6 @@
          (repeat
           (pbind
            {:instrument moog-bass
-
-            :amp [(pwhite 1 1.3 1)
-                  (pwhite 0.7 1.0 1)
-                  (pwhite 0.7 1.0 1)
-                  (pwhite 1 1.3 1)
-                  (pwhite 0.7 1.0 1)]
-            :gtranspose 0
             :note (concat
                    [:f3 :f3  :f3  :a3  :a3]
                    [:f3 :f3  :f3  :a3  :a3]
@@ -212,3 +205,5 @@
          {:quant 16}))
 
 (param moog-bass "amp")
+
+(params-vec {:instrument moog-bass})

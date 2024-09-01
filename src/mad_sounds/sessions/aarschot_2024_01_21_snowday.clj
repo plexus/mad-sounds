@@ -19,6 +19,9 @@
                  :in (pluck :in (brown-noise)
                             :delaytime (/ 1 freq))))))))
 
+(bass)
+(ctl bass :gate 0)
+
 (defloop swing-ride 2 [m b]
   (at (m (+ b 0)) (ride :amp (+ (/ (rand) 10) 0.8)))
   (at (m (+ b 1)) (ride :amp (+ (/ (rand) 10) 1)))
