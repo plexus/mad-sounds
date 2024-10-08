@@ -8,21 +8,6 @@
   (some #(when (= name (:name %)) %)
         (:params inst)))
 
-(definst bass [freq 70
-               brightness {:min 0 :default 1.1 :max 4}
-               attack {:min 0 :default 0.03 :max 0.2}
-               decay {:min 0 :default 0.14 :max 0.8}
-               sustain {:min 0 :default 0.61 :max 1.5}
-               release {:min 0 :default 0.47 :max 0.5}
-               amp  {:min 0 :default 1 :max 1.5}
-               gate 1]
-  (let [env (env-gen (adsr attack decay sustain release)
-                     :gate gate
-                     :action FREE)]
-    (-> (var-saw freq :width 0)
-        (rlpf (* brightness freq env))
-        (* amp env))))
-
 (definst moog-bass [freq 110
                     attack      {:min 0 :default 0.01 :max 0.1}
                     decay       {:min 0 :default 0.01 :max 0.3}
@@ -175,6 +160,8 @@
                 :rect-mode     :corner
                 :stroke-cap    :round})
 
+(volume 0.7)
+(stop)
 (do
   (pplay ::bass
          (repeat
