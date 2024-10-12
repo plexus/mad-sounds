@@ -1,4 +1,5 @@
 #!/usr/bin/env bb
 (require '[lambdaisland.launchpad :as launchpad])
 
-(launchpad/main {})
+(launchpad/main {:clojure-cli-command ["pw-jack" "clojure"]
+                 :main-opts ["-Sthreads" "1"]})

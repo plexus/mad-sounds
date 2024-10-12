@@ -1,0 +1,54 @@
+(ns mad-sounds.sessions.richmond-2024-10
+  (:require
+   [casa.squid.jack :as jack]
+   [overtone.live :refer :all]))
+
+(doseq [[from to](jack/connections)]
+  (jack/disconnect from to) )
+
+(jack/ports)
+(jack/connect!
+ #{["Overtone:out_1"
+    "AG06/AG03 Analog Stereo:playback_FL"]
+   ["Overtone:out_2"
+    "AG06/AG03 Analog Stereo:playback_FR"]
+
+   ["AG06/AG03 Analog Stereo:capture_FL" "Overtone:in_1"]
+   ["AG06/AG03 Analog Stereo:capture_FR" "Overtone:in_2"]
+   ["Overtone:out_1" "oso:in"]
+   ["Overtone:out_2" "oso:in"]
+   })
+
+(demo (splay (sin-osc)))
+
+(apropos noise)
+
+(defsynth vocoder [freq 200
+                   q 20]
+  (let [bands 30
+        bpfhz   (map (fn [band]
+                       (long
+                        (+ 50
+                           (* band (/ 16000 bands)))))
+                     (range bands))
+        carrier (comb-l (pink-noise) 1/20 (/ 1 freq) 3)
+        mod     (mix (sound-in [0 1]))
+        bpfmod  (* (bpf mod bpfhz (/ 1 q)) (sqrt q))
+        track   (lag3 (amplitude bpfmod) 0.03)
+        bpfcar  (* (bpf carrier bpfhz (/ 1 q)) (sqrt q) track)]
+    (out [0 1] (+ (lpf (hpf mod 2000) 14000) (* 4 bands (mix bpfcar))))))
+
+(def v (vocoder))
+(kill vocoder)
+(ctl v :q 1)
+(ctl v :freq (midi->hz :c4))
+
+(pclear)
+
+(pplay :vocoder-mod
+       (repeat
+        (pbind {:type :ctl
+                :instrument v
+                :octave 4
+                :dur [2 1]
+                :note [:c :d :e :f :g :e]})))
