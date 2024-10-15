@@ -4,24 +4,39 @@
    [overtone.live :refer :all]))
 
 (doseq [[from to](jack/connections)]
-  (jack/disconnect from to) )
+  (jack/disconnect from to))
 
 (jack/ports)
 (jack/connect!
  #{["Overtone:out_1"
-    "AG06/AG03 Analog Stereo:playback_FL"]
+    #{"AG06/AG03 Analog Stereo:playback_FL"
+      "Family 17h/19h HD Audio Controller Pro:playback_AUX0"
+      "Family 17h/19h HD Audio Controller Speaker + Headphones:playback_FL"
+      "oso:in"}]
    ["Overtone:out_2"
-    "AG06/AG03 Analog Stereo:playback_FR"]
+    #{"AG06/AG03 Analog Stereo:playback_FR"
+      "Family 17h/19h HD Audio Controller Pro:playback_AUX1"
+      "Family 17h/19h HD Audio Controller Speaker + Headphones:playback_FR"
+      "oso:in"}]
 
-   ["AG06/AG03 Analog Stereo:capture_FL" "Overtone:in_1"]
-   ["AG06/AG03 Analog Stereo:capture_FR" "Overtone:in_2"]
-   ["Overtone:out_1" "oso:in"]
-   ["Overtone:out_2" "oso:in"]
+
+
+   [#{"AG06/AG03 Analog Stereo:capture_FL"
+      "Family 17h/19h HD Audio Controller Pro:capture_AUX0"
+      #_"Family 17h/19h HD Audio Controller Digital Microphone:capture_FL"
+      "Family 17h/19h HD Audio Controller Headphones Stereo Microphone:capture_FL"
+      }
+    "Overtone:in_1"]
+   [#{"AG06/AG03 Analog Stereo:capture_FR"
+      "Family 17h/19h HD Audio Controller Pro:capture_AUX1"
+      #_"Family 17h/19h HD Audio Controller Digital Microphone:capture_FR"
+      "Family 17h/19h HD Audio Controller Headphones Stereo Microphone:capture_FR"}
+    "Overtone:in_2"]
    })
 
-(demo (splay (sin-osc)))
+(jack/connections)
 
-(apropos noise)
+(demo (out [0 1](sin-osc)))
 
 (defsynth vocoder [freq 200
                    q 20]
@@ -31,8 +46,11 @@
                         (+ 50
                            (* band (/ 16000 bands)))))
                      (range bands))
-        carrier (comb-l (pink-noise) 1/20 (/ 1 freq) 3)
-        mod     (mix (sound-in [0 1]))
+        ;; carrier
+        carrier (+ (var-saw freq :width 0)
+                   (comb-l (pink-noise) 1/20 (/ 1 freq) 3))
+        in (sound-in [0 1])
+        mod     (mix (compander in in 0.1 10 1))
         bpfmod  (* (bpf mod bpfhz (/ 1 q)) (sqrt q))
         track   (lag3 (amplitude bpfmod) 0.03)
         bpfcar  (* (bpf carrier bpfhz (/ 1 q)) (sqrt q) track)]
@@ -41,7 +59,12 @@
 (def v (vocoder))
 (kill vocoder)
 (ctl v :q 1)
-(ctl v :freq (midi->hz :c4))
+(ctl v :freq (midi->hz 60))
+
+(demo
+  5
+  (let [sig (sound-in [0 1])]
+    ))
 
 (pclear)
 
@@ -52,3 +75,89 @@
                 :octave 4
                 :dur [2 1]
                 :note [:c :d :e :f :g :e]})))
+
+
+
+(def snare (freesound 26903))
+(def kick (freesound 2086))
+(def close-hihat (freesound 802))
+(def open-hihat (freesound 26657))
+(def stick (freesound 628568))
+
+(sample (freesound-path 628568))
+(class  stick)
+;; =>
+(*clock* :bpm 120)
+
+(definst foo [freq 400 gate 1]
+  (* (env-gen (adsr) :gate gate :action FREE)
+     (lpf (square freq) (* 5 freq))))
+
+(foo)
+(stop)
+
+(ppause :foo)
+(ploop :foo
+       {:instrument foo
+        :note [:c :d :e :f]
+        :dur [1 1/2 1 3/2]
+        :amp 1.3}
+       {:quant 4})
+(do
+  (ploop :snare
+         {:instrument snare
+          :note [:- 0]})
+
+  (ploop :kick
+         {:instrument kick
+          :note [0 :- :- :- :- 0 :- 0]
+          :dur 1/2})
+
+  (ploop :stick
+         {:instrument stick
+          :note [0 :- :- :-
+                 :- 0 :- :-
+                 0 :- :- :-
+                 :- :- 0 :-]
+          :dur [1/4]
+          :amp 0.4})
+
+  (ploop :trumpet
+         {:instrument sampled-trumpet
+          :note (pchoose (range 10 24))
+          :dur (pchoose [1 1/2 1/2 2])
+          })
+
+  (ploop :hat
+         {:instrument close-hihat
+          :dur [1/2]
+          :amp (interleave (pwhite 0.2 0.3)
+                           (pwhite 0.6 0.9))}))
+
+(require '[overtone.synth.stringed :refer :all])
+(require '[overtone.inst.sampled-trumpet :refer :all])
+(stop)
+(params-vec {:instrument sampled-trumpet
+             })
+
+(sampled-trumpet 62)
+
+(def g (guitar))
+(guitar-strum g :E 0.5)
+(guitar-strum g :A 0.5)
+(guitar-strum g :C 0.5)
+(guitar-strum g :G 0.5)
+(guitar-strum g :D :down 1)
+(stop)
+(params-vec  {:instrument kick
+              :note [0 :_ 0 :-]
+              :dur [1 3/2 1/2 1]})
+
+(stereo-partial-player :buf 1)
+
+(into {} snare )
+(:id snare)
+(ppause :snare)
+(stop)
+
+(sample-player snare)

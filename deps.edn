@@ -14,7 +14,7 @@
   enlive/enlive        {:mvn/version "1.1.6"}
   quil/quil            {:mvn/version "4.3.1563"}
 
-  org.hid4java/hid4java {:mvn/version "0.8.0"}
+
   ;; org.jflac/jflac-codec                    {:mvn/version "1.5.2"}
   ;; org.freedesktop.gstreamer/gst1-java-core {:mvn/version "1.4.0"}
   }
