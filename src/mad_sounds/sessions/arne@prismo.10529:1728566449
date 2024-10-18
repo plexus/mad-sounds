@@ -78,7 +78,7 @@
 
 
 
-(def snare (sample (freesound-path 26903)))
+(def snare (freesound 26903))
 (def kick (freesound 2086))
 (def close-hihat (freesound 802))
 (def open-hihat (freesound 26657))
@@ -98,7 +98,7 @@ kick
                (* freq (rand-in-range 1 1.03)))
         mix (lin-lin (sin-osc 0.5) -1 1 0 1)]
     (splay (* amp
-              (env-gen (adsr 0.2 0.1 1 0.3) :gate gate)
+              (env-gen (adsr 0.2 0.1 1 0.3) :gate gate :action FREE)
               (+ (* mix (hpf (var-saw (lin-lin (sin-osc 4)
                                                -1 1
                                                (/ freq 1.02)
@@ -121,6 +121,8 @@ kick
                 :instrument pad})
 (pad)
 (stop)
+(clear)
+(pad)
 
 (def semitone (/ (midi->hz 2)
                  (midi->hz 1)))
@@ -194,3 +196,22 @@ kick
 (stop)
 
 (sample-player snare)
+(into {} wolves)
+(def wolves (sample "~/Downloads/mixkit-wolves-at-scary-forest-2485.wav"))
+
+(definst scrubbery [buf-id 0
+                    pos 1000
+                    depth 500
+                    freq 1
+                    ]
+  (buf-rd 2 buf-id #_(phasor:ar :start 0 :end pos)
+          (lin-lin (var-saw freq)
+                   -1 1
+                   (- pos depth) (+ pos depth)))
+  )
+
+(scrubbery (to-sc-id wolves)
+           (/ (:size wolves) 2)
+           :freq 100)
+
+(kill scrubbery)

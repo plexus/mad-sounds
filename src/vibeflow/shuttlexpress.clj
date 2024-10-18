@@ -4,6 +4,8 @@
   (:import
    (java.io File FileInputStream)))
 
+;; sudo chmod 777 /dev/input/by-id/usb-Contour_Design_ShuttleXpress-event-mouse
+
 (defn match? [v1 v2]
   (reduce (fn [acc [a b]]
             (or (= a b)
@@ -45,6 +47,5 @@
         ;; find the bits that matter for us.
         (handle-event (take (.read is bs 0 24) bs))))))
 
+#_
 (event/event-debug-on)
-
-(activate-shuttlexpress-events)
