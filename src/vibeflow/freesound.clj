@@ -36,7 +36,9 @@
    :hihat-open    183105
    :hihat-open2   26657
    :ring-hat      12912
-   :zg-hat        72526})
+   :zg-hat        72526
+
+   :stick 628568})
 
 (defonce samples (atom {}))
 

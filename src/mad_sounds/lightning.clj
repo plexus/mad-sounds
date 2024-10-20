@@ -1,10 +1,11 @@
 (ns mad-sounds.lightning
-  (:require [overtone.live :refer :all]
-            [overtone.inst.synth :refer :all]
-            [mad-sounds.inst.sampled :refer :all]
-            [mad-sounds.inst.synths :refer :all]
-            ;;[mad-sounds.launchpad-mini :refer :all]
-            ))
+  (:require
+   [overtone.live :refer :all]
+   [overtone.inst.synth :refer :all]
+   [mad-sounds.inst.sampled :refer :all]
+   [mad-sounds.inst.synths :refer :all]
+   ;;[mad-sounds.launchpad-mini :refer :all]
+   ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Building a Synth

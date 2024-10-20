@@ -201,6 +201,7 @@
 
 (defn layout-stack [{:keys [children gap]
                      :or {gap 0}} x y w h]
+  (prn 'children (count children))
   (second
    (reduce (fn [[yy res] ch]
              (let [[pw ph] (pref-size ch)]

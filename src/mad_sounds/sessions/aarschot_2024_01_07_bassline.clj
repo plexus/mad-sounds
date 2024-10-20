@@ -4,13 +4,12 @@
    [vibeflow.util :as util]))
 
 (demo
-  10
-  (pan2
-   (pluck (white-noise)
-          :delaytime 1/100
-          :decaytime 100
-          :coef 0.6)))
-
+ 10
+ (pan2
+  (pluck (white-noise)
+         :delaytime 1/100
+         :decaytime 100
+         :coef 0.6)))
 
 (definst bell [note 60
                gate 1]
@@ -41,7 +40,7 @@
                     :delaytime (/ 1 (- freq 1))
                     :decaytime decaytime
                     :coef filter-coef2))])
-        (* 3 freq)#_(line (* 3 freq) (* 5 freq)  )))))
+        (* 3 freq)))))
 
 
 (definst bell []

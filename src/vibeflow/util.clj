@@ -15,8 +15,6 @@
        (overtone-ports)
        (jack/ports @jack/default-client #{:audio :physical :in})))
 
-(jack/connect )
-
 (defn midi-preview
   ([synth-key synth]
    (midi-preview nil synth-key synth))

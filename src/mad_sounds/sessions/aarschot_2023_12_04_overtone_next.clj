@@ -32,7 +32,6 @@
                 :action FREE)
        (sin-osc :freq freq :phase (* mod depth)))))
 
-
 (definst bell [note {:default 60 :min 0 :max 120 :step 1}
                mod-interval {:default 0 :min -12 :max 24 :step 1}
                attack {:default 0.01 :min 0 :max 1 :step 0.01}

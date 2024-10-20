@@ -31,7 +31,7 @@
         :note [0 :- :- :-
                0 :-  :- :-
                0 :-  :- 0
-               :-  :- 0 :-
+               0 :-  :- :-
                ]
         :dur 1/4
         :amp (pwhite 0.4 0.6)
@@ -58,6 +58,8 @@
                                                        (* freq 1.02)))
                                      (* 3 freq)))
                  (* (- 1.1 mix) (lpf (square freq) (* 2 freq))))))))
+
+(pad)
 
 (inst-fx! pad fx-reverb)
 (inst-fx! pad fx-distortion-tubescreamer)

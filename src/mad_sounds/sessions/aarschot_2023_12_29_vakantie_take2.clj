@@ -121,7 +121,7 @@
   (hats m)
   (kicks m)
   (snares m)
-  #_(whomper m))
+  (whomper m))
 
 ;; two round buttons on novation launchkey next to the pads
 (on-event [:midi :control-change] (fn [{:keys [data1 data2]}]
@@ -258,3 +258,5 @@
   dust2
   impulse
   )
+
+(stop)
