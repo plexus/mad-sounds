@@ -19,16 +19,17 @@
    :kick-prog  385874
    :kicky      512175
    :ride       436
+   :revride    240712
    :snap       87731
    :subby      25649
    :tom        184536
    :tom2       47700
    :wop        85291
 
-   :snare         216045
-   :snare2        26903
-   :snare-fat     122053
-   :snare-bright  594282
+   :snare        216045
+   :snare2       26903
+   :snare-fat    122053
+   :snare-bright 594282
 
    :hihat-click   183401
    :hihat-closed  802
@@ -38,7 +39,8 @@
    :ring-hat      12912
    :zg-hat        72526
 
-   :stick 628568})
+   :stick 628568
+   :metronome-click 548518})
 
 (defonce samples (atom {}))
 
@@ -51,14 +53,14 @@
     `(or (get @samples ~sid)
          (let [{n-ch# :n-channels
                 id# :id} (fbuf* ~sid)
-               inst# (inst ~(name sname) [~'amp 1]
+               inst# (inst ~(name sname) [~'amp 1 ~'rate 1 ~'start-pos 0]
                            (~'* ~'amp
-                            (scaled-play-buf n-ch# id# :action FREE)
+                            (scaled-play-buf n-ch# id# :rate ~'rate :start-pos ~'start-pos :action FREE)
                             :force-ugen))]
            (swap! samples assoc ~sid inst#)
            inst#))))
 
-(run! freesound (vals sample-ids))
+#_(run! freesound (vals sample-ids))
 
 ;; ((fsample :kick))
 ;; ((fsample :kick-d))

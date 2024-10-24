@@ -30,9 +30,9 @@
         :dur (p/pchoose [1 1/2 1/4])
         :root :c}))
 
-(pbind
- {:note (pwhite 0 12)
-  :dur (pchoose [1 1/2 1/4])
+(p/pbind
+ {:note (p/pwhite 0 12)
+  :dur (p/pchoose [1 1/2 1/4])
   :root :c})
 ;;=>
 ({:note 1, :dur 1, :root :c}

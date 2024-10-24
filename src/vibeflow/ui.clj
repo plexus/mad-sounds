@@ -1,4 +1,4 @@
-(ns vibeflow.studio
+(ns vibeflow.ui
   (:require
    [overtone.live :refer :all]
    [quil.core :as q]

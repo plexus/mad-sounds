@@ -1,14 +1,12 @@
 (ns mad-sounds.sessions.conj-demo-2024-10-20
   (:require
    [overtone.live :refer :all]
-   [overtone.studio.transport :as transport]
    [vibeflow.freesound :as f]
-   [vibeflow.studio :as ui]
+   [vibeflow.ui :as ui]
    [vibeflow.synths :as s]))
 
 (demo (sin-osc))
 (stop)
-(transport/*clock* :bpm 165)
 
 (definst gendi [freq 400
                 mix {:default 0.5 :min 0 :max 1}
@@ -41,6 +39,7 @@
       (pluck (white-noise) :delaytime (/ 1 freq))
       (line 0 5000 0.3))))
 
+(*clock* :bpm 160)
 (ppause :h)
 (ploop :h {:instrument #_(f/fsample :hihat-closed)
            [(f/fsample :hihat-closed)
@@ -54,40 +53,54 @@
 
 (ppause :4)
 (ppause :n)
+(stop)
+
 (do
-  (ploop :4 {:instrument (f/fsample :kick-fat)
+  (pplay :4
+         [{:instrument (f/fsample :revride)
+           :start-pos 205000
+           :dur 4}
+          (repeat
+           (pbind
+            {:instrument (repeat (f/fsample :kick-fat))
              :note  [[0 :- :- :-]
                      [:-  0 :- :-]]
-             :dur 1/2
-             })
+             :dur 1/2}))]
+         {:align :wait})
 
-  (ploop :n {:instrument (f/fsample :snare-fat)
-             :note[[:- :- 0 :-]]
-             :dur 1/2
-             }))
+  (pplay :n [{:type :rest
+              :dur 4}
+             (repeat
+              (pbind
+               {:instrument (f/fsample :snare-fat)
+                :note [[:- :- 0 :-]]
+                :dur 1/2}))]
+         {:align :wait}))
+
 (stop)
-(ppause :t)
-(ploop :t {:instrument gendi
-           ;; :degree [1 (repeat 5 :-)]
-           :degree [4 (repeat 5 1)
-                    5 (repeat 5 1)]
-           :octave 3
-           :amp 1 #_[(range 0 0.7 0.01) (pwhite 0.5 0.8)]
-           ;; :amp [(reverse (range 0 0.7 0.01)) (repeat 0)]
-           ;; :mix [(range 0.7 1 0.03)
-           ;;       (reverse (range 0.8 1 0.05))]
-           :dur [1/2 1/4 1/4]})
+(ppause :gd)
+(ploop :gd {:instrument gendi
+            ;; :degree [1 (repeat 5 :-)]
+            ;; :degree (repeat 6 1)
+            :degree [4 (repeat 5 1)
+                     5 (repeat 5 1)]
+            :octave 3
+            :amp 1 #_[(range 0 0.7 0.01) (pwhite 0.5 0.8)]
+            ;; :amp [(reverse (range 0 0.7 0.01)) (repeat 0)]
+            ;; :mix [(range 0.7 1 0.03)
+            ;;       (reverse (range 0.8 1 0.05))]
+            :dur [1/2 1/4 1/4]})
 
 (ui/inst-ui! gendi)
 
 (ppause :t)
 (ploop :t {:instrument tonk
-           :degree (pchoose [[0 0 0 0 5]])
+           :degree
            :octave 4
            :amp 0.5
            :mode :minor
-           :dur [1/2 1/4 1/2 3/4 6]})
-
+           :dur })
+(stop)
 (ppause :b)
 (ploop :b {:type [:note :note :chord :rest]
            :instrument s/bell
@@ -105,7 +118,7 @@
 (ui/inst-ui! s/bell)
 
 (ppause :w)
-(ploop :w {;;:type [:note :note :chord :rest]
+(ploop :w {:type [:note :note :chord :rest]
            ;; :type [:chord]
            :instrument s/wobblepad
            :degree [0 0 1 0]
@@ -118,3 +131,11 @@
 (stop)
 
 (volume 1.5)
+
+(ppause :m)
+(ploop :m {:instrument s/marimba
+           :degree (map #(repeat 2 %) (pwhite 0 12))
+           :octave [5 6]
+           :amp 0.2
+           :dur [1/2]
+           })

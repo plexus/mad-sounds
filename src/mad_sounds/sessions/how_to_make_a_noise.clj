@@ -210,8 +210,7 @@
  ::bass
  (pbind {:degree [:i :i :iii :ii :i :iv :v]
          :dur    [1/2 1 1/2 1/2 1/2 1/2 1/2]
-         :root   ^{:dur 8} [:c3 :d3 :b2 :c3]}
-        ##Inf)
+         :root   ^{:dur 8} [:c3 :d3 :b2 :c3]})
  {:proto {:instrument #'bass
           :attack     0.01
           :octave     3}})
