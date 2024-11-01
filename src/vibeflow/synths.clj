@@ -172,6 +172,3 @@
                 (rlpf (* brightness freq env) 1/3)
                 (* amp env))]
     sig))
-
-(kill basic-bass)
-(basic-bass)

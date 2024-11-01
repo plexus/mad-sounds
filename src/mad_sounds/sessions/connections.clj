@@ -8,6 +8,7 @@
 (jack/connect!
  #{["Overtone:out_1"
     #{"AG06/AG03 Analog Stereo:playback_FL"
+      "Dante USB I/O Module Analog Stereo:playback_FL"
       "AG06/AG03 Digital Stereo (IEC958):playback_FL"
       "AG06/AG03 Pro:playback_AUX0"
       "Family 17h/19h HD Audio Controller Pro:playback_AUX0"
@@ -16,6 +17,7 @@
       "jmeters:in-1"}]
    ["Overtone:out_2"
     #{"AG06/AG03 Analog Stereo:playback_FR"
+      "Dante USB I/O Module Analog Stereo:playback_FR"
       "AG06/AG03 Digital Stereo (IEC958):playback_FR"
       "AG06/AG03 Pro:playback_AUX1"
       "Family 17h/19h HD Audio Controller Pro:playback_AUX1"
