@@ -159,7 +159,8 @@
   (o/on-event [:midi :note-off]
               (fn [{:keys [note channel] :as e}]
                 (when-let [inst (get (vec insts) channel)]
-                  (o/event :note-end :instrument inst :midinote note
-                           :overtone.studio.event/key note
-                           :end-time (o/now))))
+                  (o/ctl inst :gate 0)
+                  #_(o/event :note-end :instrument inst :midinote note
+                             :overtone.studio.event/key note
+                             :end-time (o/now))))
               ::midi-off))
