@@ -141,3 +141,25 @@
           (fn [v#]
             (alter-meta! (var ~lname) assoc :killed true))})
      ))
+
+(defn param [inst name]
+  (some #(when (= name (:name %)) %)
+        (:params inst)))
+
+(defn keyboard-insts [& insts]
+  (o/on-event [:midi :note-on]
+              (fn [{:keys [note channel velocity] :as e}]
+                (when-let [inst (get (vec insts) channel)]
+                  (o/event :note :instrument inst :midinote note
+                           :overtone.studio.event/key note
+                           :end-time nil
+                           :amp (* 1.5 (/ velocity 128) @(:value (param inst "amp"))))))
+              ::midi-on)
+
+  (o/on-event [:midi :note-off]
+              (fn [{:keys [note channel] :as e}]
+                (when-let [inst (get (vec insts) channel)]
+                  (o/event :note-end :instrument inst :midinote note
+                           :overtone.studio.event/key note
+                           :end-time (o/now))))
+              ::midi-off))
