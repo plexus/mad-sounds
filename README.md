@@ -1,4 +1,4 @@
-#+TITLE: VIBEFLOW
+# VIBEFLOW
 
 ```
 ____   ____._____.           _____.__
@@ -13,34 +13,36 @@ All rights reserved.
 
 My dabblings in Overtone.
 
-* Links
+## Links
 
 - [[http://vishnumenon.com/2013/06/25/musical-chains-music-generation-with-clojure/][Overtone + Markov Chains]]
 - [[http://www.soundonsound.com/sos/allsynthsecrets.htm]["Synth Secrets" by Sound-on-Sound]]
 - [[http://blog.josephwilk.net/clojure/creating-instruments-with-overtone.html][Creating Instruments with Overtone (Joseph Wilk)]]
 
-** Sounds and samples
+### Sounds and samples
 
 - https://archive.org/details/usc-sound-effect-archive
 
-** SuperCollider Docs
+### SuperCollider Docs
 
 - [[http://doc.sccode.org/Browse.html#UGens][Browse all UGens]]
 - [[http://doc.sccode.org/Guides/Tour_of_UGens.html][A Tour of UGens]]
 - [[http://doc.sccode.org/Guides/UGens-and-Synths.html][UGens and Synths]]
 
-* Copyright
+### Copyright
 
 Copyright 2013-2023, Arne Brasseur.
 
-# ```
-# pw-jack gjacktransport
-# ~/github/qpwgraph/build/src/qpwgraph
-# ~/opt/Orca/Orca
-# cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
-# midisnoop
-# jack-keyboard
-# hydrogen
-# qjackctl
-# ```
+### Notes
+
+```
+pw-jack gjacktransport
+~/github/qpwgraph/build/src/qpwgraph
+~/opt/Orca/Orca
+cd ~/clj-projects/mad-sounds && bin/launchpad vibeflow
+midisnoop
+jack-keyboard
+hydrogen
+qjackctl
+```
 
