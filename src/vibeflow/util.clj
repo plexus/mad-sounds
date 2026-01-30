@@ -52,6 +52,15 @@
                    (synth)))
                [synth-key :pad])))
 
+(defn param [inst pname]
+  (some #(when (= (name pname) (:name %)) %)
+        (:params inst)))
+
+(defn ctl! [inst & args]
+  (doseq [[pname v] (partition 2 args)]
+    (reset! (:value (param inst pname)) v)
+    (o/ctl inst (keyword pname) v)))
+
 (defn midi-ctl
   ([synth-key synth]
    (let [params (:params (if (var? synth) @synth synth))]
@@ -68,15 +77,14 @@
                                      (when-let [c (get mapping (keyword (:name param)))]
                                        [c param])))
                           params)]
-     ;;(prn mapping)
      (o/on-event [:midi :control-change]
                  (fn [{:keys [data1 data2]}]
                    (when-let [{:keys [name default min max step value]
                                :or {min 0}}
                               (get mapping data1)]
                      (let [synth (if (var? synth) @synth synth)
-                           v (/ data2 127)
-                           v (+ min (* (- max min) v)) ;; 0-127 -> min-max
+                           v (if (and min max) (/ data2 127) data2)
+                           v (if (and min max) (+ min (* (- max min) v)) v) ;; 0-127 -> min-max
                            v (if step
                                (* step (Math/round (double (/ v step))))
                                v)] ;; round to nearest step
@@ -142,25 +150,23 @@
             (alter-meta! (var ~lname) assoc :killed true))})
      ))
 
-(defn param [inst name]
-  (some #(when (= name (:name %)) %)
-        (:params inst)))
-
 (defn keyboard-insts [& insts]
   (o/on-event [:midi :note-on]
               (fn [{:keys [note channel velocity] :as e}]
                 (when-let [inst (get (vec insts) channel)]
                   (o/event :note :instrument inst :midinote note
-                           :overtone.studio.event/key note
+                           :id [inst note]
                            :end-time nil
                            :amp (* 1.5 (/ velocity 128) @(:value (param inst "amp"))))))
               ::midi-on)
 
   (o/on-event [:midi :note-off]
               (fn [{:keys [note channel] :as e}]
+                (println :NOTE_OFF)
                 (when-let [inst (get (vec insts) channel)]
-                  (o/ctl inst :gate 0)
-                  #_(o/event :note-end :instrument inst :midinote note
-                             :overtone.studio.event/key note
-                             :end-time (o/now))))
+                  (println "GOT INST" inst)
+                  #_(o/ctl inst :gate 0)
+                  (o/event :note-end :instrument inst :midinote note
+                           :id [inst note]
+                           )))
               ::midi-off))
