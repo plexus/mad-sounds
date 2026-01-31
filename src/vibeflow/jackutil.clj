@@ -1,6 +1,7 @@
 (ns vibeflow.jackutil
-  (:require [vibeflow.midi.core :as midi]
-            [vibeflow.midi.jack :as jack]))
+  (:require
+   [vibeflow.midi.core :as midi]
+   [casa.squid.jack :as jack]))
 
 (defn remove-cc [client]
   (let [in  (jack/midi-in-port client :remove-cc-in)
@@ -22,10 +23,13 @@
                    :process
                    ::monitor
                    (fn [client frames]
-                     (when-let [e (seq (jack/read-midi-events in))]
-                       (run! (fn [[e t]]
-                               (println t (midi/event e)))
-                             e))
+                     (try
+                       (let [e (seq (jack/read-midi-events in))]
+                         (run! (fn [[e t]]
+                                 (println t (midi/event e)))
+                               e))
+                       (catch Exception e
+                         (println e)))
                      true)))
   client)
 

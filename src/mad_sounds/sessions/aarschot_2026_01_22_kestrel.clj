@@ -1,4 +1,4 @@
-(ns mad-sounds.sessions.aarschot-2025-01-22-kestrel
+(ns mad-sounds.sessions.aarschot-2026-01-22-kestrel
   (:require
    [casa.squid.jack :as jack]
    [clojure.java.io :as io]
