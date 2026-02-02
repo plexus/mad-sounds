@@ -79,6 +79,10 @@
                           params)]
      (o/on-event [:midi :control-change]
                  (fn [{:keys [data1 data2]}]
+                   (println "CC" data1 data2)
+                   (println mapping)
+                   (println            (get mapping data1))
+
                    (when-let [{:keys [name default min max step value]
                                :or {min 0}}
                               (get mapping data1)]
