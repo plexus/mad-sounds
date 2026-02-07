@@ -535,3 +535,8 @@ one every two bars, one every four bars"
   (stop)
 
   (pulse))
+
+
+(/ 3200.0 14)
+
+(* 80 14 3)

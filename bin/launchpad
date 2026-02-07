@@ -2,4 +2,5 @@
 (require '[lambdaisland.launchpad :as launchpad])
 
 (launchpad/main {:clojure-cli-command ["pw-jack" "clojure"]
+                 :java-args ["-Djavax.sound.midi.MidiDeviceProvider=casa.squid.jack.midi.JackMidiDeviceProvider"]
                  :main-opts ["-Sthreads" "1"]})
